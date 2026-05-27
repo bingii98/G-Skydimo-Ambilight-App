@@ -1,0 +1,8 @@
+{
+  "APP_NAME": "G Skydimo Ambilight App",
+  "APP_NAME_PRIMARY": "G Skydimo",
+  "APP_NAME_TAG": "Ambilight App",
+  "APP_TAGLINE": "Real-time ambilight for Skydimo LED strips",
+  "APP_DESCRIPTION": "Desktop ambilight app for Skydimo LED strips with screen sync, color control, gradients, animations, and USB auto-detection.",
+  "APP_DESCRIPTION_LONG": "Control Skydimo LED strips from your PC with real-time screen ambilight, solid colors, gradients, per-LED painting, animations, zone calibration, and one-click USB connect."
+}

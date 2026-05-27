@@ -13,7 +13,7 @@ const { fetchGradientSuggestion } = require("./services/openaiGradient");
 const { fetchAnimationSuggestion } = require("./services/openaiAnimation");
 const { loadAppBehavior, saveAppBehavior } = require("./appBehaviorState");
 
-const isDev = process.env.NODE_ENV === "development";
+const isDev = !app.isPackaged && process.env.NODE_ENV === "development";
 const START_IN_TRAY_ARG = "--start-in-tray";
 
 let mainWindow = null;

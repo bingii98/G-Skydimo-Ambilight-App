@@ -9,17 +9,63 @@
     "build": "vite build",
     "test": "vitest run",
     "start": "npm run build && cross-env NODE_ENV=production electron .",
-    "dev:main": "cross-env NODE_ENV=development nodemon"
+    "dev:main": "cross-env NODE_ENV=development nodemon",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder --win"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
     "concurrently": "^9.1.2",
     "cross-env": "^7.0.3",
     "electron": "^35.0.0",
+    "electron-builder": "^25.1.8",
     "nodemon": "^3.1.9",
     "vite": "^6.0.7",
     "vitest": "^4.1.7",
     "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "com.gskydimo.ambilight",
+    "productName": "G Skydimo Ambilight App",
+    "copyright": "Copyright © 2026",
+    "directories": {
+      "output": "release"
+    },
+    "npmRebuild": false,
+    "files": [
+      "main.js",
+      "preload.js",
+      "connectionManager.js",
+      "skydimo.js",
+      "appInfo.js",
+      "appInfo.json",
+      "appBehaviorState.js",
+      "windowState.js",
+      "services/**/*",
+      "dist/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "**/node_modules/serialport/**/*",
+      "**/node_modules/@serialport/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "G Skydimo Ambilight App"
+    }
   },
   "dependencies": {
     "@mantine/core": "^7.16.2",

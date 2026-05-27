@@ -38,6 +38,19 @@ npm run build
 npm start
 ```
 
+### Windows installer (.exe)
+
+Build a setup installer for Windows (output in `release/`):
+
+```bash
+npm install
+npm run dist
+```
+
+The installer file is named like `G Skydimo Ambilight App Setup 1.0.0.exe`. Run it to install the app with Start Menu and desktop shortcuts.
+
+For an unpacked build folder (no installer), use `npm run pack`.
+
 ## Scripts
 
 | Command | Description |

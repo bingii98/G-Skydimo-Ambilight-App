@@ -1,11 +1,13 @@
-export {
+import appInfo from "../../appInfo.json";
+
+export const {
   APP_NAME,
   APP_NAME_PRIMARY,
   APP_NAME_TAG,
   APP_TAGLINE,
   APP_DESCRIPTION,
   APP_DESCRIPTION_LONG,
-} from "../../appInfo.js";
+} = appInfo;
 
 /** Quick colors — tông LED phổ biến (teal, coral, neon, cool white), không dùng RGB thuần. */
 export const PRESETS = [
