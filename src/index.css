@@ -5236,9 +5236,16 @@ section:has(.app-slider--dragging) .color-studio__brightness-value {
   display: grid;
   place-items: center;
   border-radius: 8px;
-  background: linear-gradient(145deg, var(--tb-accent), #0f766e);
-  color: #ffffff;
+  overflow: hidden;
+  flex-shrink: 0;
   box-shadow: 0 4px 14px rgba(20, 184, 166, 0.28);
+}
+
+.titlebar__logo img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
 }
 
 .titlebar__titles {

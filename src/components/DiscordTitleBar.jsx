@@ -78,7 +78,7 @@ export function DiscordTitleBar({
       <div className="titlebar__main" onDoubleClick={handleDragDoubleClick}>
         <div className="titlebar__brand">
           <span className="titlebar__logo" aria-hidden>
-            <IconBolt size={15} stroke={2.4} />
+            <img src="/favicon.png" alt="" draggable={false} />
           </span>
           <div className="titlebar__titles">
             <span className="titlebar__name">{APP_NAME_PRIMARY}</span>

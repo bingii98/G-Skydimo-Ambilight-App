@@ -15,6 +15,31 @@ const { loadAppBehavior, saveAppBehavior } = require("./appBehaviorState");
 
 const isDev = !app.isPackaged && process.env.NODE_ENV === "development";
 const START_IN_TRAY_ARG = "--start-in-tray";
+const ASSETS_DIR = path.join(__dirname, "assets");
+
+function getAssetPath(filename) {
+  return path.join(ASSETS_DIR, filename);
+}
+
+function loadAppIcon() {
+  const iconPath = getAssetPath("icon.png");
+  const image = nativeImage.createFromPath(iconPath);
+  return image.isEmpty() ? undefined : image;
+}
+
+function loadTrayIcon() {
+  const iconPath = getAssetPath("tray.png");
+  let image = nativeImage.createFromPath(iconPath);
+  if (image.isEmpty()) {
+    return nativeImage.createEmpty();
+  }
+
+  if (process.platform === "win32") {
+    image = image.resize({ width: 16, height: 16, quality: "best" });
+  }
+
+  return image;
+}
 
 let mainWindow = null;
 let connectionManager = null;
@@ -56,9 +81,7 @@ function shouldStartHiddenInTray() {
   return login.wasOpenedAsLogin || login.wasOpenedAsHidden;
 }
 
-const TRAY_ICON = nativeImage.createFromDataURL(
-  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAIUlEQVQ4T2NkYGD4z0ABYBw1gGE0DBhGwwAGBgYGBgB5XwEfG8H0wQAAAABJRU5ErkJggg=="
-);
+const TRAY_ICON = loadTrayIcon();
 
 function isSkydimoAppRunning() {
   if (process.platform !== "win32") {
@@ -194,6 +217,7 @@ function createWindow() {
     minWidth: WINDOW_MIN.width,
     minHeight: WINDOW_MIN.height,
     title: APP_NAME,
+    icon: loadAppIcon(),
     resizable: true,
     frame: false,
     titleBarStyle: "hidden",
