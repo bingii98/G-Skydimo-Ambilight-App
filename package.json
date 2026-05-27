@@ -1,0 +1,33 @@
+{
+  "name": "skydimo-color",
+  "version": "1.0.0",
+  "description": "Desktop ambilight app for Skydimo LED strips with screen sync, color control, gradients, animations, and USB auto-detection.",
+  "license": "MIT",
+  "main": "main.js",
+  "scripts": {
+    "dev": "concurrently -k \"vite\" \"wait-on tcp:5173 && nodemon\"",
+    "build": "vite build",
+    "test": "vitest run",
+    "start": "npm run build && cross-env NODE_ENV=production electron .",
+    "dev:main": "cross-env NODE_ENV=development nodemon"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
+    "electron": "^35.0.0",
+    "nodemon": "^3.1.9",
+    "vite": "^6.0.7",
+    "vitest": "^4.1.7",
+    "wait-on": "^8.0.1"
+  },
+  "dependencies": {
+    "@mantine/core": "^7.16.2",
+    "@mantine/hooks": "^7.16.2",
+    "@mantine/notifications": "^7.16.2",
+    "@tabler/icons-react": "^3.29.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "serialport": "^13.0.0"
+  }
+}

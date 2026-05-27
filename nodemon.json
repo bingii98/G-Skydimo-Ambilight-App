@@ -1,0 +1,16 @@
+{
+  "watch": [
+    "main.js",
+    "preload.js",
+    "connectionManager.js",
+    "skydimo.js",
+    "windowState.js"
+  ],
+  "ext": "js",
+  "ignore": ["node_modules", "src", "dist"],
+  "exec": "electron .",
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "delay": 300
+}
