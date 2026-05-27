@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="164" height="314" viewBox="0 0 164 314" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="164" y2="314" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1a1416"/>
+      <stop offset="1" stop-color="#0b0e12"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="0" y2="314" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF6B6B" stop-opacity="0"/>
+      <stop offset="0.55" stop-color="#FF6B6B" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#8B5CF6" stop-opacity="0.08"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="164" height="314" fill="url(#bg)"/>
+  <rect width="164" height="314" fill="url(#accent)"/>
+  <rect x="158" width="6" height="314" fill="#FF6B6B" opacity="0.22"/>
+
+  <circle cx="82" cy="78" r="28" fill="#15181c" stroke="#3a424c" stroke-width="1.5"/>
+  <path d="M68 78H96M82 62V94" stroke="#FF6B6B" stroke-width="3" stroke-linecap="round"/>
+
+  <text x="82" y="138" text-anchor="middle" fill="#eef3f8" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="700">Uninstall</text>
+  <text x="82" y="158" text-anchor="middle" fill="#FF6B6B" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600">G Skydimo Ambilight</text>
+  <text x="82" y="182" text-anchor="middle" fill="#8b949e" font-family="Segoe UI, Arial, sans-serif" font-size="8.5">Remove the app from your PC</text>
+  <text x="82" y="196" text-anchor="middle" fill="#8b949e" font-family="Segoe UI, Arial, sans-serif" font-size="8.5">Shortcuts will also be removed</text>
+</svg>

@@ -32,7 +32,8 @@
     "productName": "G Skydimo Ambilight App",
     "copyright": "Copyright © 2026",
     "directories": {
-      "output": "release"
+      "output": "release",
+      "buildResources": "build"
     },
     "npmRebuild": false,
     "files": [
@@ -69,7 +70,18 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "G Skydimo Ambilight App"
+      "shortcutName": "G Skydimo Ambilight App",
+      "menuCategory": "G Skydimo",
+      "runAfterFinish": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeader": "build/installer-header.bmp",
+      "installerSidebar": "build/installer-sidebar.bmp",
+      "uninstallerSidebar": "build/uninstaller-sidebar.bmp",
+      "license": "build/license.html",
+      "include": "build/installer.nsh",
+      "uninstallDisplayName": "G Skydimo Ambilight App",
+      "artifactName": "${productName} Setup ${version}.${ext}"
     }
   },
   "dependencies": {
