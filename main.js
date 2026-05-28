@@ -55,11 +55,19 @@ const appBehavior = {
 };
 
 function applyLoginItemSettings() {
+  if (!app.isPackaged) {
+    // Dev mode runs through electron.exe — never register startup or Windows
+    // will launch bare Electron on login (no app path / main.js).
+    app.setLoginItemSettings({ openAtLogin: false });
+    return;
+  }
+
   const startInTray = appBehavior.launchAtStartup && appBehavior.runInTray;
 
   app.setLoginItemSettings({
     openAtLogin: appBehavior.launchAtStartup,
     openAsHidden: startInTray,
+    path: process.execPath,
     args: startInTray ? [START_IN_TRAY_ARG] : [],
   });
 }
@@ -429,7 +437,7 @@ ipcMain.handle("app:setBehavior", async (_event, behavior = {}) => {
 
   return {
     runInTray: appBehavior.runInTray,
-    launchAtStartup: app.getLoginItemSettings().openAtLogin,
+    launchAtStartup: appBehavior.launchAtStartup,
   };
 });
 

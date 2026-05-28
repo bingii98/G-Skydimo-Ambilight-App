@@ -13,6 +13,7 @@ import { COLOR_MODES } from "../lib/ledLayout";
 import { useWindowChrome } from "../hooks/useWindowChrome";
 import { skydimo } from "../lib/skydimoApi";
 import { APP_NAME_PRIMARY, APP_NAME_TAG, APP_TAGLINE } from "../lib/constants";
+import appLogoUrl from "../assets/app-logo.png";
 
 function WindowControl({ label, className, onClick, children }) {
   return (
@@ -78,7 +79,7 @@ export function DiscordTitleBar({
       <div className="titlebar__main" onDoubleClick={handleDragDoubleClick}>
         <div className="titlebar__brand">
           <span className="titlebar__logo" aria-hidden>
-            <img src="/favicon.png" alt="" draggable={false} />
+            <img src={appLogoUrl} alt="" draggable={false} />
           </span>
           <div className="titlebar__titles">
             <span className="titlebar__name">{APP_NAME_PRIMARY}</span>
