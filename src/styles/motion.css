@@ -143,39 +143,52 @@
   animation: ui-stagger-in var(--sk-duration-normal) var(--sk-ease-out) both;
 }
 
-.middle-list .list-row:nth-child(1) {
+.middle-list .external-device-row {
+  animation: ui-stagger-in var(--sk-duration-normal) var(--sk-ease-out) both;
+}
+
+.middle-list .list-row:nth-child(1),
+.middle-list .external-device-row:nth-child(2) {
   animation-delay: 0.02s;
 }
 
-.middle-list .list-row:nth-child(2) {
+.middle-list .list-row:nth-child(2),
+.middle-list .external-device-row:nth-child(3) {
   animation-delay: 0.05s;
 }
 
-.middle-list .list-row:nth-child(3) {
+.middle-list .list-row:nth-child(3),
+.middle-list .external-device-row:nth-child(4) {
   animation-delay: 0.08s;
 }
 
-.middle-list .list-row:nth-child(4) {
+.middle-list .list-row:nth-child(4),
+.middle-list .external-device-row:nth-child(5) {
   animation-delay: 0.11s;
 }
 
-.middle-list .list-row:nth-child(5) {
+.middle-list .list-row:nth-child(5),
+.middle-list .external-device-row:nth-child(6) {
   animation-delay: 0.14s;
 }
 
-.middle-list .list-row:nth-child(6) {
+.middle-list .list-row:nth-child(6),
+.middle-list .external-device-row:nth-child(7) {
   animation-delay: 0.17s;
 }
 
-.middle-list .list-row:nth-child(7) {
+.middle-list .list-row:nth-child(7),
+.middle-list .external-device-row:nth-child(8) {
   animation-delay: 0.2s;
 }
 
-.middle-list .list-row:nth-child(8) {
+.middle-list .list-row:nth-child(8),
+.middle-list .external-device-row:nth-child(9) {
   animation-delay: 0.23s;
 }
 
-.middle-list .list-row:nth-child(n + 9) {
+.middle-list .list-row:nth-child(n + 9),
+.middle-list .external-device-row:nth-child(n + 10) {
   animation-delay: 0.26s;
 }
 

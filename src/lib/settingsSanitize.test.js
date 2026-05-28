@@ -35,6 +35,12 @@ describe("sanitizeSettings", () => {
     expect(result.hex).toBe("#FF0000");
   });
 
+  it("preserves valid activeNav and falls back for invalid values", () => {
+    expect(sanitizeSettings({ activeNav: "external" }).activeNav).toBe("external");
+    expect(sanitizeSettings({ activeNav: "studio" }).activeNav).toBe("studio");
+    expect(sanitizeSettings({ activeNav: "invalid" }).activeNav).toBe("devices");
+  });
+
   it("syncs animation palette colors when in animation mode", () => {
     const result = sanitizeSettings({
       hex: "#FF0000",

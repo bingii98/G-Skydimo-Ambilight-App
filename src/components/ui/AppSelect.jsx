@@ -21,9 +21,10 @@ export function AppSelect({
   data,
   value,
   onChange,
-  placeholder = "Chọn…",
+  placeholder = "Select…",
   disabled,
-  nothingFoundMessage = "Không có lựa chọn",
+  nothingFoundMessage = "No options",
+  comboboxProps,
   ...rest
 }) {
   return (
@@ -38,7 +39,7 @@ export function AppSelect({
       allowDeselect={false}
       checkIconPosition="right"
       nothingFoundMessage={nothingFoundMessage}
-      comboboxProps={{ withinPortal: true, position: "bottom-start", offset: 6 }}
+      comboboxProps={{ withinPortal: true, position: "bottom-start", offset: 6, ...comboboxProps }}
       rightSection={<IconChevronDown size={16} stroke={1.75} className="sk-select__chevron" />}
       leftSection={leftSection}
       leftSectionWidth={leftSection ? 38 : undefined}

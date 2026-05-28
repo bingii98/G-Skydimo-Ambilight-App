@@ -39,6 +39,13 @@ const DEFAULT_SETTINGS = {
   screenSyncSourceId: null,
   screenSyncRegion: "edge",
   screenSyncSmoothing: 18,
+  activeNav: "devices",
+  externalLeds: {
+    activeDeviceId: null,
+    configDeviceIds: [],
+    deviceOrder: [],
+    devices: {},
+  },
 };
 
 function loadSettings() {

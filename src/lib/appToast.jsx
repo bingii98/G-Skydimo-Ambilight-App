@@ -225,6 +225,68 @@ export function toastWarning(title, message) {
   });
 }
 
+export function toastPowerLoopBlocked() {
+  showToast({
+    variant: "warning",
+    title: "Loop connection blocked",
+    message: "Phát hiện vòng lặp (Loop Connection)! Disable another linker first.",
+    icon: <IconAlertTriangle size={18} stroke={1.75} />,
+    autoClose: ERROR_AUTO_CLOSE,
+  });
+}
+
+export function toastPowerBranchLimit() {
+  showToast({
+    variant: "warning",
+    title: "Branch limit exceeded",
+    message: "More than 12 panels on a power branch — add a power injector or split the layout.",
+    icon: <IconAlertTriangle size={18} stroke={1.75} />,
+    autoClose: ERROR_AUTO_CLOSE,
+  });
+}
+
+export function toastPanelRotateBlocked() {
+  showToast({
+    variant: "warning",
+    title: "Cannot rotate panel",
+    message: "This rotation would overlap another panel. Try the opposite direction or reposition the panel.",
+    icon: <IconAlertTriangle size={18} stroke={1.75} />,
+    autoClose: ERROR_AUTO_CLOSE,
+  });
+}
+
+export function toastPanelAddBlockedEdge() {
+  showToast({
+    variant: "warning",
+    title: "Edge already linked",
+    message:
+      "That edge midpoint already has a panel attached. Drop on a corner handle (C1–C3) instead.",
+    icon: <IconAlertTriangle size={18} stroke={1.75} />,
+    autoClose: ERROR_AUTO_CLOSE,
+  });
+}
+
+export function toastPanelAddBlockedOverlap() {
+  showToast({
+    variant: "warning",
+    title: "No room at this corner",
+    message:
+      "A panel here would overlap another triangle. Try a different corner or flip Apex up/down.",
+    icon: <IconAlertTriangle size={18} stroke={1.75} />,
+    autoClose: ERROR_AUTO_CLOSE,
+  });
+}
+
+export function toastPanelAddBlocked() {
+  showToast({
+    variant: "warning",
+    title: "Cannot attach panel",
+    message: "Drop closer to a corner handle (C1–C3) on the panel you want to extend.",
+    icon: <IconAlertTriangle size={18} stroke={1.75} />,
+    autoClose: ERROR_AUTO_CLOSE,
+  });
+}
+
 export function toastAiGradientMissingKey() {
   showToast({
     variant: "warning",

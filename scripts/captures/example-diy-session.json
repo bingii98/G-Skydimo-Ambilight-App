@@ -1,0 +1,18 @@
+{
+  "deviceName": "MELK-HONEYCOMB-EXAMPLE",
+  "notes": "Replace hex with frames copied from nRF Connect while painting in the official app DIY mode.",
+  "frames": [
+    {
+      "note": "baseline all red",
+      "hex": "7e 00 05 03 ff 00 00 00 ef"
+    },
+    {
+      "note": "led 0 blue",
+      "hex": "7e 07 05 06 00 00 00 ff ef"
+    },
+    {
+      "note": "led 3 green",
+      "hex": "7e 07 05 06 03 00 ff 00 ef"
+    }
+  ]
+}

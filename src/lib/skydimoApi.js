@@ -35,6 +35,27 @@ const skydimoStub = {
   onThemeChange: () => noopUnsubscribe(),
   onWindowChromeChange: () => noopUnsubscribe(),
   onStateChange: () => noopUnsubscribe(),
+  getExternalState: () =>
+    Promise.resolve({
+      bleAvailable: false,
+      bleError: "External LED control requires the Electron app",
+      poweredOn: false,
+      scanning: false,
+      devices: [],
+      message: "External LED control requires the Electron app",
+    }),
+  externalScan: () => Promise.resolve(null),
+  externalStopScan: () => Promise.resolve(null),
+  externalRegisterSaved: () => Promise.resolve(null),
+  externalConnect: () =>
+    Promise.reject(new Error("External LED control requires the Electron app")),
+  externalDisconnect: () => Promise.resolve(null),
+  externalSetColor: () => Promise.resolve(null),
+  externalSetPixels: () => Promise.resolve(null),
+  externalSetPower: () => Promise.resolve(null),
+  externalSetAnimation: () => Promise.resolve(null),
+  externalSetBrightness: () => Promise.resolve(null),
+  onExternalStateChange: () => noopUnsubscribe(),
 };
 
 export const skydimo = window.skydimo ?? skydimoStub;

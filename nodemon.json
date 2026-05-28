@@ -3,6 +3,8 @@
     "main.js",
     "preload.js",
     "connectionManager.js",
+    "externalLedManager.js",
+    "services/**/*.js",
     "skydimo.js",
     "windowState.js",
     "startupRegistration.js"

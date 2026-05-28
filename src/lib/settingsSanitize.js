@@ -12,9 +12,15 @@ import {
 import { normalizeColorSchemePreference } from "../theme/colorScheme";
 import { COLOR_MODES } from "./colorModes";
 import { inferModeColorsFromSettings, normalizeModeColors } from "./modeColors";
+import { sanitizeExternalLeds } from "./externalLedSettings";
 
-const VALID_COLOR_MODES = new Set(["single", "leds", "animation", "screen"]);
+const VALID_COLOR_MODES = new Set(["single", "leds", "animation", "bleEffect", "screen"]);
 const VALID_PAINT_MODES = new Set(["solid", "gradient"]);
+const VALID_APP_NAV = new Set(["devices", "external", "studio", "settings"]);
+
+export function sanitizeActiveNav(value, fallback = "devices") {
+  return VALID_APP_NAV.has(value) ? value : fallback;
+}
 
 export function sanitizeSettings(settings, defaults = {}) {
   const base = {
@@ -173,6 +179,15 @@ export function sanitizeSettings(settings, defaults = {}) {
       typeof next.openaiApiKey === "string" ? next.openaiApiKey.trim() : "";
 
     next.animationSpeed = Math.max(1, Math.min(100, Number(next.animationSpeed) || 50));
+    if (next.bleEffectId != null && next.bleEffectId !== "") {
+      const effectId = Math.round(Number(next.bleEffectId));
+      next.bleEffectId = Number.isFinite(effectId) && effectId >= 0 && effectId <= 511 ? effectId : null;
+    } else {
+      next.bleEffectId = null;
+    }
+    if (next.colorMode === COLOR_MODES.BLE_EFFECT && next.bleEffectId == null) {
+      next.colorMode = COLOR_MODES.SINGLE;
+    }
     next.animationIntensity = Math.max(1, Math.min(100, Number(next.animationIntensity) || 50));
     next.animationSecondaryHex = ensureHex(next.animationSecondaryHex, "#FF0066");
     next.animationReverse = Boolean(next.animationReverse);
@@ -231,6 +246,9 @@ export function sanitizeSettings(settings, defaults = {}) {
 
     delete next.screenSyncSaturation;
     delete next.screenSyncDepth;
+
+    next.externalLeds = sanitizeExternalLeds(next.externalLeds);
+    next.activeNav = sanitizeActiveNav(next.activeNav, defaults.activeNav || "devices");
 
     return next;
   } catch {

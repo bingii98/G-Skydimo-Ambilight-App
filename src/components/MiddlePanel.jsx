@@ -4,15 +4,18 @@ import {
   IconDeviceDesktop,
   IconSearch,
   IconSettings,
+  IconBulb,
 } from "@tabler/icons-react";
 import { NavRail } from "./NavRail";
 import { DevicePanel, DevicePanelActions, SettingsPanel } from "./SidebarPanels";
+import { ExternalLedsPanel } from "./ExternalLedsPanel";
 import { PanelTitle } from "./ui/AppPanel";
 import { ensureHex } from "../lib/colorUtils";
 
 const NAV_META = {
   studio: { title: "Recent colors", icon: IconClock },
   devices: { title: "Devices", icon: IconDeviceDesktop },
+  external: { title: "External LEDs", icon: IconBulb },
   settings: { title: "Settings", icon: IconSettings },
 };
 
@@ -47,16 +50,35 @@ export function MiddlePanel({
   connecting,
   portFilter,
   onPortFilterChange,
+  externalState,
+  onExternalScan,
+  onExternalConnect,
+  onExternalDisconnect,
+  externalScanning,
+  externalConnecting,
+  externalConnected,
 }) {
   const navMeta = NAV_META[nav];
   const hexUpper = ensureHex(settings.hex).toUpperCase();
   const panelVariantClass =
-    nav === "devices" ? " middle-panel--devices" : nav === "settings" ? " middle-panel--settings" : "";
+    nav === "devices"
+      ? " middle-panel--devices"
+      : nav === "settings"
+        ? " middle-panel--settings"
+        : nav === "external"
+          ? " middle-panel--external"
+          : "";
 
   return (
     <aside className={`middle-panel${panelVariantClass}`}>
       <div className="middle-panel__shell">
-        <NavRail active={nav} onChange={onNavChange} connected={connected} embedded />
+        <NavRail
+          active={nav}
+          onChange={onNavChange}
+          connected={connected}
+          externalConnected={externalConnected}
+          embedded
+        />
 
         <div className="middle-panel__content">
           <div className={`middle-panel__head${nav === "settings" ? " middle-panel__head--settings" : ""}`}>
@@ -112,6 +134,19 @@ export function MiddlePanel({
                 onConnect={onConnect}
                 onSyncOptions={onSyncOptions}
                 portFilter={portFilter}
+                />
+              )}
+
+              {nav === "external" && (
+                <ExternalLedsPanel
+                  settings={settings}
+                  externalState={externalState}
+                  onSettingsChange={onSettingsChange}
+                  onScan={onExternalScan}
+                  onConnect={onExternalConnect}
+                  onDisconnect={onExternalDisconnect}
+                  scanning={externalScanning}
+                  connecting={externalConnecting}
                 />
               )}
 

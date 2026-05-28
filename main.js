@@ -3,6 +3,7 @@ const { APP_NAME } = require("./appInfo");
 const path = require("path");
 const { execSync } = require("child_process");
 const { ConnectionManager } = require("./connectionManager");
+const { ExternalLedManager } = require("./externalLedManager");
 const {
   WINDOW_SIZE,
   WINDOW_MIN,
@@ -86,6 +87,7 @@ function broadcastThemeChange() {
 
 let mainWindow = null;
 let connectionManager = null;
+let externalLedManager = null;
 let tray = null;
 let isQuitting = false;
 let isShuttingDown = false;
@@ -198,6 +200,12 @@ function isSkydimoAppRunning() {
     return output.includes("SkyDimo.exe");
   } catch {
     return false;
+  }
+}
+
+function broadcastExternalState(state) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send("externalLed:state", state);
   }
 }
 
@@ -381,6 +389,18 @@ function createWindow() {
   });
 }
 
+function getExternalManager() {
+  if (!externalLedManager) {
+    externalLedManager = new ExternalLedManager({
+      onStateChange: broadcastExternalState,
+    });
+    externalLedManager.init().catch(() => {
+      externalLedManager.emitState();
+    });
+  }
+  return externalLedManager;
+}
+
 function getManager() {
   if (!connectionManager) {
     connectionManager = new ConnectionManager({
@@ -404,6 +424,11 @@ async function shutdown() {
   if (connectionManager) {
     await connectionManager.destroy();
     connectionManager = null;
+  }
+
+  if (externalLedManager) {
+    await externalLedManager.destroy();
+    externalLedManager = null;
   }
 }
 
@@ -453,6 +478,53 @@ ipcMain.handle("device:setColor", async (_event, red, green, blue, count) => {
 ipcMain.handle("device:setPixels", async (_event, pixels, count) => {
   return getManager().setPixels(pixels, count);
 });
+
+ipcMain.handle("externalLed:getState", async () => getExternalManager().getState());
+
+ipcMain.handle("externalLed:scan", async () => getExternalManager().startScan());
+
+ipcMain.handle("externalLed:stopScan", async () => getExternalManager().stopScan());
+
+ipcMain.handle("externalLed:registerSaved", async (_event, deviceIds = []) => {
+  getExternalManager().registerSavedDevices(deviceIds);
+  return getExternalManager().getState();
+});
+
+ipcMain.handle("externalLed:connect", async (_event, deviceId) => {
+  try {
+    return await getExternalManager().connect(deviceId);
+  } catch (error) {
+    const state = getExternalManager().getState();
+    return {
+      ...state,
+      message: error.message,
+    };
+  }
+});
+
+ipcMain.handle("externalLed:disconnect", async (_event, deviceId) =>
+  getExternalManager().disconnect(deviceId)
+);
+
+ipcMain.handle("externalLed:setColor", async (_event, deviceId, red, green, blue, brightness) =>
+  getExternalManager().setColor(deviceId, red, green, blue, brightness)
+);
+
+ipcMain.handle("externalLed:setPixels", async (_event, deviceId, pixels, brightness) =>
+  getExternalManager().setPixels(deviceId, pixels, brightness)
+);
+
+ipcMain.handle("externalLed:setPower", async (_event, deviceId, poweredOn) =>
+  getExternalManager().setPower(deviceId, poweredOn)
+);
+
+ipcMain.handle("externalLed:setAnimation", async (_event, deviceId, mode, speed) =>
+  getExternalManager().setAnimation(deviceId, mode, speed)
+);
+
+ipcMain.handle("externalLed:setBrightness", async (_event, deviceId, brightness) =>
+  getExternalManager().setBrightness(deviceId, brightness)
+);
 
 ipcMain.handle("openai:suggestGradient", async (_event, options = {}) => {
   try {
@@ -623,6 +695,7 @@ app.whenReady().then(() => {
 
   windowState = loadWindowState();
   getManager();
+  getExternalManager();
   createWindow();
 
   app.on("activate", () => {

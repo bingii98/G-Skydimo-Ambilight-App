@@ -1,13 +1,14 @@
 import { Tooltip } from "@mantine/core";
-import { IconDeviceDesktop, IconPalette, IconSettings } from "@tabler/icons-react";
+import { IconDeviceDesktop, IconPalette, IconSettings, IconBulb } from "@tabler/icons-react";
 
 const NAV_ITEMS = [
   { id: "devices", label: "Devices", icon: IconDeviceDesktop },
+  { id: "external", label: "External LEDs", icon: IconBulb },
   { id: "studio", label: "Color control", icon: IconPalette },
   { id: "settings", label: "Settings", icon: IconSettings },
 ];
 
-export function NavRail({ active, onChange, connected, embedded = false }) {
+export function NavRail({ active, onChange, connected, externalConnected, embedded = false }) {
   const activeIndex = Math.max(
     0,
     NAV_ITEMS.findIndex(({ id }) => id === active)
@@ -32,6 +33,7 @@ export function NavRail({ active, onChange, connected, embedded = false }) {
             >
               <Icon size={22} stroke={1.8} />
               {id === "devices" && connected && <span className="nav-rail__dot" />}
+              {id === "external" && externalConnected && <span className="nav-rail__dot" />}
             </button>
           </Tooltip>
         ))}

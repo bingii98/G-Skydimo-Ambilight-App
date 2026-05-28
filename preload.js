@@ -39,4 +39,26 @@ contextBridge.exposeInMainWorld("skydimo", {
     ipcRenderer.on("connection:state", listener);
     return () => ipcRenderer.removeListener("connection:state", listener);
   },
+  getExternalState: () => ipcRenderer.invoke("externalLed:getState"),
+  externalScan: () => ipcRenderer.invoke("externalLed:scan"),
+  externalStopScan: () => ipcRenderer.invoke("externalLed:stopScan"),
+  externalRegisterSaved: (deviceIds) =>
+    ipcRenderer.invoke("externalLed:registerSaved", deviceIds),
+  externalConnect: (deviceId) => ipcRenderer.invoke("externalLed:connect", deviceId),
+  externalDisconnect: (deviceId) => ipcRenderer.invoke("externalLed:disconnect", deviceId),
+  externalSetColor: (deviceId, red, green, blue, brightness) =>
+    ipcRenderer.invoke("externalLed:setColor", deviceId, red, green, blue, brightness),
+  externalSetPixels: (deviceId, pixels, brightness) =>
+    ipcRenderer.invoke("externalLed:setPixels", deviceId, pixels, brightness),
+  externalSetPower: (deviceId, poweredOn) =>
+    ipcRenderer.invoke("externalLed:setPower", deviceId, poweredOn),
+  externalSetAnimation: (deviceId, mode, speed) =>
+    ipcRenderer.invoke("externalLed:setAnimation", deviceId, mode, speed),
+  externalSetBrightness: (deviceId, brightness) =>
+    ipcRenderer.invoke("externalLed:setBrightness", deviceId, brightness),
+  onExternalStateChange: (callback) => {
+    const listener = (_event, state) => callback(state);
+    ipcRenderer.on("externalLed:state", listener);
+    return () => ipcRenderer.removeListener("externalLed:state", listener);
+  },
 });

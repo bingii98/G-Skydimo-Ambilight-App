@@ -1,0 +1,1211 @@
+{
+  "STRIPX": [
+    {
+      "id": 1,
+      "key": "rainbow_up",
+      "label": "Rainbow Up"
+    },
+    {
+      "id": 2,
+      "key": "rainbow_down",
+      "label": "Rainbow Down"
+    },
+    {
+      "id": 3,
+      "key": "chase",
+      "label": "Chase"
+    },
+    {
+      "id": 4,
+      "key": "chase_2",
+      "label": "Chase 2"
+    },
+    {
+      "id": 5,
+      "key": "chase_3",
+      "label": "Chase 3"
+    },
+    {
+      "id": 6,
+      "key": "chase_4",
+      "label": "Chase 4"
+    },
+    {
+      "id": 7,
+      "key": "chase_5",
+      "label": "Chase 5"
+    },
+    {
+      "id": 8,
+      "key": "chase_6",
+      "label": "Chase 6"
+    },
+    {
+      "id": 9,
+      "key": "chase_7",
+      "label": "Chase 7"
+    },
+    {
+      "id": 10,
+      "key": "chase_8",
+      "label": "Chase 8"
+    },
+    {
+      "id": 11,
+      "key": "chase_pulse",
+      "label": "Chase Pulse"
+    },
+    {
+      "id": 12,
+      "key": "chase_pulse_2",
+      "label": "Chase Pulse 2"
+    },
+    {
+      "id": 13,
+      "key": "chase_pulse_3",
+      "label": "Chase Pulse 3"
+    },
+    {
+      "id": 14,
+      "key": "chase_pulse_4",
+      "label": "Chase Pulse 4"
+    },
+    {
+      "id": 15,
+      "key": "chase_pulse_5",
+      "label": "Chase Pulse 5"
+    },
+    {
+      "id": 16,
+      "key": "chase_pulse_6",
+      "label": "Chase Pulse 6"
+    },
+    {
+      "id": 17,
+      "key": "chase_pulse_7",
+      "label": "Chase Pulse 7"
+    },
+    {
+      "id": 18,
+      "key": "chase_pulse_8",
+      "label": "Chase Pulse 8"
+    },
+    {
+      "id": 19,
+      "key": "chase_pulse_9",
+      "label": "Chase Pulse 9"
+    },
+    {
+      "id": 20,
+      "key": "chase_pulse_10",
+      "label": "Chase Pulse 10"
+    },
+    {
+      "id": 21,
+      "key": "chase_pulse_11",
+      "label": "Chase Pulse 11"
+    },
+    {
+      "id": 22,
+      "key": "chase_pulse_12",
+      "label": "Chase Pulse 12"
+    },
+    {
+      "id": 23,
+      "key": "chase_flow",
+      "label": "Chase Flow"
+    },
+    {
+      "id": 24,
+      "key": "chase_flow_2",
+      "label": "Chase Flow 2"
+    },
+    {
+      "id": 25,
+      "key": "chase_flow_3",
+      "label": "Chase Flow 3"
+    },
+    {
+      "id": 26,
+      "key": "chase_flow_4",
+      "label": "Chase Flow 4"
+    },
+    {
+      "id": 27,
+      "key": "chase_flow_5",
+      "label": "Chase Flow 5"
+    },
+    {
+      "id": 28,
+      "key": "chase_flow_6",
+      "label": "Chase Flow 6"
+    },
+    {
+      "id": 29,
+      "key": "chase_flow_7",
+      "label": "Chase Flow 7"
+    },
+    {
+      "id": 30,
+      "key": "chase_flow_8",
+      "label": "Chase Flow 8"
+    },
+    {
+      "id": 31,
+      "key": "chase_flow_9",
+      "label": "Chase Flow 9"
+    },
+    {
+      "id": 32,
+      "key": "chase_flow_10",
+      "label": "Chase Flow 10"
+    },
+    {
+      "id": 33,
+      "key": "chase_flow_11",
+      "label": "Chase Flow 11"
+    },
+    {
+      "id": 34,
+      "key": "chase_flow_12",
+      "label": "Chase Flow 12"
+    },
+    {
+      "id": 35,
+      "key": "chase_flow_13",
+      "label": "Chase Flow 13"
+    },
+    {
+      "id": 36,
+      "key": "chase_flow_14",
+      "label": "Chase Flow 14"
+    },
+    {
+      "id": 37,
+      "key": "chase_flow_15",
+      "label": "Chase Flow 15"
+    },
+    {
+      "id": 38,
+      "key": "chase_flow_16",
+      "label": "Chase Flow 16"
+    },
+    {
+      "id": 39,
+      "key": "chase_flow_17",
+      "label": "Chase Flow 17"
+    },
+    {
+      "id": 40,
+      "key": "chase_flow_18",
+      "label": "Chase Flow 18"
+    },
+    {
+      "id": 41,
+      "key": "chase_flow_19",
+      "label": "Chase Flow 19"
+    },
+    {
+      "id": 42,
+      "key": "chase_flow_20",
+      "label": "Chase Flow 20"
+    },
+    {
+      "id": 43,
+      "key": "chase_flow_21",
+      "label": "Chase Flow 21"
+    },
+    {
+      "id": 44,
+      "key": "chase_flow_22",
+      "label": "Chase Flow 22"
+    },
+    {
+      "id": 45,
+      "key": "chase_flow_23",
+      "label": "Chase Flow 23"
+    },
+    {
+      "id": 46,
+      "key": "chase_flow_24",
+      "label": "Chase Flow 24"
+    },
+    {
+      "id": 47,
+      "key": "chase_flow_25",
+      "label": "Chase Flow 25"
+    },
+    {
+      "id": 48,
+      "key": "chase_flow_26",
+      "label": "Chase Flow 26"
+    },
+    {
+      "id": 49,
+      "key": "chase_flow_27",
+      "label": "Chase Flow 27"
+    },
+    {
+      "id": 50,
+      "key": "chase_flow_28",
+      "label": "Chase Flow 28"
+    },
+    {
+      "id": 51,
+      "key": "chase_flow_29",
+      "label": "Chase Flow 29"
+    },
+    {
+      "id": 52,
+      "key": "chase_flow_30",
+      "label": "Chase Flow 30"
+    },
+    {
+      "id": 53,
+      "key": "pulse_flash",
+      "label": "Pulse Flash"
+    },
+    {
+      "id": 54,
+      "key": "pulse_flash_2",
+      "label": "Pulse Flash 2"
+    },
+    {
+      "id": 55,
+      "key": "curtain",
+      "label": "Curtain"
+    },
+    {
+      "id": 56,
+      "key": "curtain_2",
+      "label": "Curtain 2"
+    },
+    {
+      "id": 57,
+      "key": "curtain_3",
+      "label": "Curtain 3"
+    },
+    {
+      "id": 58,
+      "key": "curtain_4",
+      "label": "Curtain 4"
+    },
+    {
+      "id": 59,
+      "key": "curtain_5",
+      "label": "Curtain 5"
+    },
+    {
+      "id": 60,
+      "key": "curtain_6",
+      "label": "Curtain 6"
+    },
+    {
+      "id": 61,
+      "key": "fire",
+      "label": "Fire"
+    },
+    {
+      "id": 62,
+      "key": "fire_2",
+      "label": "Fire 2"
+    },
+    {
+      "id": 63,
+      "key": "fire_3",
+      "label": "Fire 3"
+    },
+    {
+      "id": 64,
+      "key": "fire_4",
+      "label": "Fire 4"
+    },
+    {
+      "id": 65,
+      "key": "fire_5",
+      "label": "Fire 5"
+    },
+    {
+      "id": 66,
+      "key": "fire_6",
+      "label": "Fire 6"
+    },
+    {
+      "id": 67,
+      "key": "fire_7",
+      "label": "Fire 7"
+    },
+    {
+      "id": 68,
+      "key": "fire_8",
+      "label": "Fire 8"
+    },
+    {
+      "id": 69,
+      "key": "fire_9",
+      "label": "Fire 9"
+    },
+    {
+      "id": 70,
+      "key": "fire_10",
+      "label": "Fire 10"
+    },
+    {
+      "id": 71,
+      "key": "fire_11",
+      "label": "Fire 11"
+    },
+    {
+      "id": 72,
+      "key": "fire_12",
+      "label": "Fire 12"
+    },
+    {
+      "id": 73,
+      "key": "fire_13",
+      "label": "Fire 13"
+    },
+    {
+      "id": 74,
+      "key": "fade",
+      "label": "Fade"
+    },
+    {
+      "id": 75,
+      "key": "fade_2",
+      "label": "Fade 2"
+    },
+    {
+      "id": 76,
+      "key": "fade_3",
+      "label": "Fade 3"
+    },
+    {
+      "id": 77,
+      "key": "fade_4",
+      "label": "Fade 4"
+    },
+    {
+      "id": 78,
+      "key": "fade_5",
+      "label": "Fade 5"
+    },
+    {
+      "id": 79,
+      "key": "fade_6",
+      "label": "Fade 6"
+    },
+    {
+      "id": 80,
+      "key": "fade_7",
+      "label": "Fade 7"
+    },
+    {
+      "id": 81,
+      "key": "fade_8",
+      "label": "Fade 8"
+    },
+    {
+      "id": 82,
+      "key": "fade_9",
+      "label": "Fade 9"
+    },
+    {
+      "id": 83,
+      "key": "fade_10",
+      "label": "Fade 10"
+    },
+    {
+      "id": 84,
+      "key": "fade_11",
+      "label": "Fade 11"
+    },
+    {
+      "id": 85,
+      "key": "fade_12",
+      "label": "Fade 12"
+    },
+    {
+      "id": 86,
+      "key": "fade_13",
+      "label": "Fade 13"
+    },
+    {
+      "id": 87,
+      "key": "fade_14",
+      "label": "Fade 14"
+    },
+    {
+      "id": 88,
+      "key": "fade_15",
+      "label": "Fade 15"
+    },
+    {
+      "id": 89,
+      "key": "fade_16",
+      "label": "Fade 16"
+    },
+    {
+      "id": 90,
+      "key": "fade_17",
+      "label": "Fade 17"
+    },
+    {
+      "id": 91,
+      "key": "fade_18",
+      "label": "Fade 18"
+    },
+    {
+      "id": 92,
+      "key": "fade_19",
+      "label": "Fade 19"
+    },
+    {
+      "id": 93,
+      "key": "fade_20",
+      "label": "Fade 20"
+    },
+    {
+      "id": 94,
+      "key": "fade_21",
+      "label": "Fade 21"
+    },
+    {
+      "id": 95,
+      "key": "fade_22",
+      "label": "Fade 22"
+    },
+    {
+      "id": 96,
+      "key": "fade_23",
+      "label": "Fade 23"
+    },
+    {
+      "id": 97,
+      "key": "fade_24",
+      "label": "Fade 24"
+    },
+    {
+      "id": 98,
+      "key": "fade_25",
+      "label": "Fade 25"
+    },
+    {
+      "id": 99,
+      "key": "fade_26",
+      "label": "Fade 26"
+    },
+    {
+      "id": 100,
+      "key": "fade_27",
+      "label": "Fade 27"
+    },
+    {
+      "id": 101,
+      "key": "fade_28",
+      "label": "Fade 28"
+    },
+    {
+      "id": 102,
+      "key": "fade_29",
+      "label": "Fade 29"
+    },
+    {
+      "id": 103,
+      "key": "fade_30",
+      "label": "Fade 30"
+    },
+    {
+      "id": 104,
+      "key": "fade_31",
+      "label": "Fade 31"
+    },
+    {
+      "id": 105,
+      "key": "fade_32",
+      "label": "Fade 32"
+    },
+    {
+      "id": 106,
+      "key": "fade_33",
+      "label": "Fade 33"
+    },
+    {
+      "id": 107,
+      "key": "fade_34",
+      "label": "Fade 34"
+    },
+    {
+      "id": 108,
+      "key": "fade_35",
+      "label": "Fade 35"
+    },
+    {
+      "id": 109,
+      "key": "fade_36",
+      "label": "Fade 36"
+    },
+    {
+      "id": 110,
+      "key": "fade_37",
+      "label": "Fade 37"
+    },
+    {
+      "id": 111,
+      "key": "fade_38",
+      "label": "Fade 38"
+    },
+    {
+      "id": 112,
+      "key": "fade_39",
+      "label": "Fade 39"
+    },
+    {
+      "id": 113,
+      "key": "fade_40",
+      "label": "Fade 40"
+    },
+    {
+      "id": 114,
+      "key": "fade_41",
+      "label": "Fade 41"
+    },
+    {
+      "id": 115,
+      "key": "fade_42",
+      "label": "Fade 42"
+    },
+    {
+      "id": 116,
+      "key": "fade_43",
+      "label": "Fade 43"
+    },
+    {
+      "id": 117,
+      "key": "fade_44",
+      "label": "Fade 44"
+    },
+    {
+      "id": 118,
+      "key": "fade_45",
+      "label": "Fade 45"
+    },
+    {
+      "id": 119,
+      "key": "fade_46",
+      "label": "Fade 46"
+    },
+    {
+      "id": 120,
+      "key": "fade_47",
+      "label": "Fade 47"
+    },
+    {
+      "id": 121,
+      "key": "fade_48",
+      "label": "Fade 48"
+    },
+    {
+      "id": 122,
+      "key": "fade_49",
+      "label": "Fade 49"
+    },
+    {
+      "id": 123,
+      "key": "fade_50",
+      "label": "Fade 50"
+    },
+    {
+      "id": 124,
+      "key": "fade_51",
+      "label": "Fade 51"
+    },
+    {
+      "id": 125,
+      "key": "fade_52",
+      "label": "Fade 52"
+    },
+    {
+      "id": 126,
+      "key": "fade_53",
+      "label": "Fade 53"
+    },
+    {
+      "id": 127,
+      "key": "fade_54",
+      "label": "Fade 54"
+    },
+    {
+      "id": 128,
+      "key": "fade_55",
+      "label": "Fade 55"
+    },
+    {
+      "id": 129,
+      "key": "fade_56",
+      "label": "Fade 56"
+    },
+    {
+      "id": 130,
+      "key": "fade_57",
+      "label": "Fade 57"
+    },
+    {
+      "id": 131,
+      "key": "fade_58",
+      "label": "Fade 58"
+    },
+    {
+      "id": 132,
+      "key": "fade_59",
+      "label": "Fade 59"
+    },
+    {
+      "id": 133,
+      "key": "fade_60",
+      "label": "Fade 60"
+    },
+    {
+      "id": 134,
+      "key": "fade_61",
+      "label": "Fade 61"
+    },
+    {
+      "id": 135,
+      "key": "fade_62",
+      "label": "Fade 62"
+    },
+    {
+      "id": 136,
+      "key": "fade_63",
+      "label": "Fade 63"
+    },
+    {
+      "id": 137,
+      "key": "fade_64",
+      "label": "Fade 64"
+    },
+    {
+      "id": 138,
+      "key": "fade_65",
+      "label": "Fade 65"
+    },
+    {
+      "id": 139,
+      "key": "fade_66",
+      "label": "Fade 66"
+    },
+    {
+      "id": 140,
+      "key": "fade_67",
+      "label": "Fade 67"
+    },
+    {
+      "id": 141,
+      "key": "fade_68",
+      "label": "Fade 68"
+    },
+    {
+      "id": 142,
+      "key": "fade_69",
+      "label": "Fade 69"
+    },
+    {
+      "id": 143,
+      "key": "fade_70",
+      "label": "Fade 70"
+    },
+    {
+      "id": 144,
+      "key": "chase_action",
+      "label": "Chase Action"
+    },
+    {
+      "id": 145,
+      "key": "chase_action_2",
+      "label": "Chase Action 2"
+    },
+    {
+      "id": 146,
+      "key": "chase_action_3",
+      "label": "Chase Action 3"
+    },
+    {
+      "id": 147,
+      "key": "chase_action_4",
+      "label": "Chase Action 4"
+    },
+    {
+      "id": 148,
+      "key": "chase_action_5",
+      "label": "Chase Action 5"
+    },
+    {
+      "id": 149,
+      "key": "chase_action_6",
+      "label": "Chase Action 6"
+    },
+    {
+      "id": 150,
+      "key": "chase_action_7",
+      "label": "Chase Action 7"
+    },
+    {
+      "id": 151,
+      "key": "chase_action_8",
+      "label": "Chase Action 8"
+    },
+    {
+      "id": 152,
+      "key": "chase_action_9",
+      "label": "Chase Action 9"
+    },
+    {
+      "id": 153,
+      "key": "chase_action_10",
+      "label": "Chase Action 10"
+    },
+    {
+      "id": 154,
+      "key": "chase_action_11",
+      "label": "Chase Action 11"
+    },
+    {
+      "id": 155,
+      "key": "chase_action_12",
+      "label": "Chase Action 12"
+    },
+    {
+      "id": 156,
+      "key": "chase_action_13",
+      "label": "Chase Action 13"
+    },
+    {
+      "id": 157,
+      "key": "chase_action_14",
+      "label": "Chase Action 14"
+    },
+    {
+      "id": 158,
+      "key": "chase_action_15",
+      "label": "Chase Action 15"
+    },
+    {
+      "id": 159,
+      "key": "chase_action_16",
+      "label": "Chase Action 16"
+    },
+    {
+      "id": 160,
+      "key": "chase_action_17",
+      "label": "Chase Action 17"
+    },
+    {
+      "id": 161,
+      "key": "chase_action_18",
+      "label": "Chase Action 18"
+    },
+    {
+      "id": 162,
+      "key": "chase_action_19",
+      "label": "Chase Action 19"
+    },
+    {
+      "id": 163,
+      "key": "chase_action_20",
+      "label": "Chase Action 20"
+    },
+    {
+      "id": 164,
+      "key": "chase_action_21",
+      "label": "Chase Action 21"
+    },
+    {
+      "id": 165,
+      "key": "chase_action_22",
+      "label": "Chase Action 22"
+    },
+    {
+      "id": 166,
+      "key": "chase_action_23",
+      "label": "Chase Action 23"
+    },
+    {
+      "id": 167,
+      "key": "chase_action_24",
+      "label": "Chase Action 24"
+    },
+    {
+      "id": 168,
+      "key": "elevator",
+      "label": "Elevator"
+    },
+    {
+      "id": 169,
+      "key": "elevator_2",
+      "label": "Elevator 2"
+    },
+    {
+      "id": 170,
+      "key": "elevator_3",
+      "label": "Elevator 3"
+    },
+    {
+      "id": 171,
+      "key": "elevator_4",
+      "label": "Elevator 4"
+    },
+    {
+      "id": 172,
+      "key": "elevator_5",
+      "label": "Elevator 5"
+    },
+    {
+      "id": 173,
+      "key": "elevator_6",
+      "label": "Elevator 6"
+    },
+    {
+      "id": 174,
+      "key": "elevator_7",
+      "label": "Elevator 7"
+    },
+    {
+      "id": 175,
+      "key": "elevator_8",
+      "label": "Elevator 8"
+    },
+    {
+      "id": 176,
+      "key": "elevator_9",
+      "label": "Elevator 9"
+    },
+    {
+      "id": 177,
+      "key": "elevator_10",
+      "label": "Elevator 10"
+    },
+    {
+      "id": 178,
+      "key": "elevator_11",
+      "label": "Elevator 11"
+    },
+    {
+      "id": 179,
+      "key": "elevator_12",
+      "label": "Elevator 12"
+    },
+    {
+      "id": 180,
+      "key": "elevator_13",
+      "label": "Elevator 13"
+    },
+    {
+      "id": 181,
+      "key": "elevator_14",
+      "label": "Elevator 14"
+    },
+    {
+      "id": 182,
+      "key": "bar_flash",
+      "label": "Bar Flash"
+    },
+    {
+      "id": 183,
+      "key": "bar_flash_2",
+      "label": "Bar Flash 2"
+    },
+    {
+      "id": 184,
+      "key": "bar_flash_3",
+      "label": "Bar Flash 3"
+    },
+    {
+      "id": 185,
+      "key": "bar_flash_4",
+      "label": "Bar Flash 4"
+    },
+    {
+      "id": 186,
+      "key": "bar_flash_5",
+      "label": "Bar Flash 5"
+    },
+    {
+      "id": 187,
+      "key": "bar_flash_6",
+      "label": "Bar Flash 6"
+    },
+    {
+      "id": 188,
+      "key": "bar_flash_7",
+      "label": "Bar Flash 7"
+    },
+    {
+      "id": 189,
+      "key": "bar_flash_8",
+      "label": "Bar Flash 8"
+    },
+    {
+      "id": 190,
+      "key": "bar_flash_9",
+      "label": "Bar Flash 9"
+    },
+    {
+      "id": 191,
+      "key": "bar_flash_10",
+      "label": "Bar Flash 10"
+    },
+    {
+      "id": 192,
+      "key": "bar_flash_11",
+      "label": "Bar Flash 11"
+    },
+    {
+      "id": 193,
+      "key": "bar_flash_12",
+      "label": "Bar Flash 12"
+    },
+    {
+      "id": 194,
+      "key": "flash_rgb",
+      "label": "Flash Rgb"
+    },
+    {
+      "id": 195,
+      "key": "flash_rgb_2",
+      "label": "Flash Rgb 2"
+    },
+    {
+      "id": 196,
+      "key": "flash_rgb_3",
+      "label": "Flash Rgb 3"
+    },
+    {
+      "id": 197,
+      "key": "flash_rgb_4",
+      "label": "Flash Rgb 4"
+    },
+    {
+      "id": 198,
+      "key": "flash_rgb_5",
+      "label": "Flash Rgb 5"
+    },
+    {
+      "id": 199,
+      "key": "flash_rgb_6",
+      "label": "Flash Rgb 6"
+    },
+    {
+      "id": 200,
+      "key": "party_flash",
+      "label": "Party Flash"
+    },
+    {
+      "id": 201,
+      "key": "fade_bottom",
+      "label": "Fade Bottom"
+    },
+    {
+      "id": 202,
+      "key": "pulse",
+      "label": "Pulse"
+    },
+    {
+      "id": 203,
+      "key": "pulse_2",
+      "label": "Pulse 2"
+    },
+    {
+      "id": 204,
+      "key": "pulse_3",
+      "label": "Pulse 3"
+    },
+    {
+      "id": 205,
+      "key": "pulse_4",
+      "label": "Pulse 4"
+    },
+    {
+      "id": 206,
+      "key": "pulse_5",
+      "label": "Pulse 5"
+    },
+    {
+      "id": 207,
+      "key": "pulse_6",
+      "label": "Pulse 6"
+    },
+    {
+      "id": 208,
+      "key": "pulse_7",
+      "label": "Pulse 7"
+    },
+    {
+      "id": 209,
+      "key": "pulse_8",
+      "label": "Pulse 8"
+    },
+    {
+      "id": 210,
+      "key": "pulse_9",
+      "label": "Pulse 9"
+    },
+    {
+      "id": 211,
+      "key": "pulse_10",
+      "label": "Pulse 10"
+    },
+    {
+      "id": 212,
+      "key": "fade_71",
+      "label": "Fade 71"
+    },
+    {
+      "id": 213,
+      "key": "fade_72",
+      "label": "Fade 72"
+    },
+    {
+      "id": 214,
+      "key": "fade_73",
+      "label": "Fade 73"
+    },
+    {
+      "id": 215,
+      "key": "fade_74",
+      "label": "Fade 74"
+    },
+    {
+      "id": 216,
+      "key": "fade_75",
+      "label": "Fade 75"
+    },
+    {
+      "id": 217,
+      "key": "fade_76",
+      "label": "Fade 76"
+    },
+    {
+      "id": 218,
+      "key": "fade_77",
+      "label": "Fade 77"
+    },
+    {
+      "id": 219,
+      "key": "fade_78",
+      "label": "Fade 78"
+    },
+    {
+      "id": 220,
+      "key": "fade_bar",
+      "label": "Fade Bar"
+    },
+    {
+      "id": 384,
+      "key": "music_flow_flash",
+      "label": "Music Flow Flash"
+    },
+    {
+      "id": 385,
+      "key": "music_flash",
+      "label": "Music Flash"
+    },
+    {
+      "id": 386,
+      "key": "music_rainbow",
+      "label": "Music Rainbow"
+    },
+    {
+      "id": 387,
+      "key": "music_snake",
+      "label": "Music Snake"
+    },
+    {
+      "id": 388,
+      "key": "music_rainbow_2",
+      "label": "Music Rainbow 2"
+    },
+    {
+      "id": 389,
+      "key": "music_pulse",
+      "label": "Music Pulse"
+    },
+    {
+      "id": 390,
+      "key": "music_flow",
+      "label": "Music Flow"
+    },
+    {
+      "id": 391,
+      "key": "music_pulse_2",
+      "label": "Music Pulse 2"
+    }
+  ],
+  "MELK_Ox": [
+    {
+      "id": 0,
+      "key": "AutoPlay",
+      "label": "AutoPlay"
+    },
+    {
+      "id": 1,
+      "key": "Magic_Back",
+      "label": "Magic Back"
+    },
+    {
+      "id": 2,
+      "key": "Effect_02",
+      "label": "Effect 02"
+    },
+    {
+      "id": 3,
+      "key": "Effect_03",
+      "label": "Effect 03"
+    },
+    {
+      "id": 4,
+      "key": "Effect_04",
+      "label": "Effect 04"
+    },
+    {
+      "id": 5,
+      "key": "Effect_05",
+      "label": "Effect 05"
+    },
+    {
+      "id": 16,
+      "key": "Rainbow_Cycle",
+      "label": "Rainbow Cycle"
+    },
+    {
+      "id": 32,
+      "key": "Color_Wave",
+      "label": "Color Wave"
+    },
+    {
+      "id": 48,
+      "key": "Breathing",
+      "label": "Breathing"
+    },
+    {
+      "id": 64,
+      "key": "Strobe",
+      "label": "Strobe"
+    },
+    {
+      "id": 128,
+      "key": "Jump_RGB",
+      "label": "Jump RGB"
+    },
+    {
+      "id": 144,
+      "key": "Fade_RGB",
+      "label": "Fade RGB"
+    },
+    {
+      "id": 207,
+      "key": "Blue_Scroll",
+      "label": "Blue Scroll"
+    }
+  ]
+}
