@@ -1,24 +1,22 @@
-import React, { useEffect } from "react";
+import React from "react";
 import ReactDOM from "react-dom/client";
-import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { AppErrorBoundary } from "./components/AppErrorBoundary";
+import { AppThemeProvider } from "./components/AppThemeProvider";
 import { CrashScreen } from "./components/CrashScreen";
 import { APP_NAME, SETTINGS_KEY } from "./lib/constants";
-import { applyCssVariables, mantineTheme } from "./theme";
+import { createMantineTheme } from "./theme";
+import { readInitialResolvedScheme } from "./theme/bootTheme";
+import { MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
 import "./index.css";
-
-applyCssVariables();
+import "./styles/motion.css";
+import "./theme/bootTheme.js";
 
 function Root({ App }) {
-  useEffect(() => {
-    applyCssVariables();
-  }, []);
-
   return (
-    <MantineProvider theme={mantineTheme} defaultColorScheme="light">
+    <AppThemeProvider>
       <Notifications
         position="bottom-right"
         limit={4}
@@ -30,13 +28,15 @@ function Root({ App }) {
       <AppErrorBoundary>
         <App />
       </AppErrorBoundary>
-    </MantineProvider>
+    </AppThemeProvider>
   );
 }
 
 function BootError({ error }) {
+  const resolvedScheme = readInitialResolvedScheme();
+
   return (
-    <MantineProvider theme={mantineTheme} defaultColorScheme="light">
+    <MantineProvider theme={createMantineTheme(resolvedScheme)} forceColorScheme={resolvedScheme}>
       <CrashScreen
         error={error}
         errorInfo={null}

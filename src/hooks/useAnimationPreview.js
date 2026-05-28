@@ -5,6 +5,7 @@ import {
   isValidAnimationId,
   pixelsToLedHexes,
 } from "../lib/animations";
+import { resolveAnimationSettings } from "../lib/animationTuningLive";
 
 export function useAnimationPreview({ enabled, animationId, settings, ledCount, deviceModel = null }) {
   const [ledColors, setLedColors] = useState([]);
@@ -21,7 +22,7 @@ export function useAnimationPreview({ enabled, animationId, settings, ledCount, 
       const pixels = buildAnimationPixels({
         animationId,
         ledCount,
-        settings,
+        settings: resolveAnimationSettings(settings),
         timeMs: elapsed,
         deviceModel,
       });
@@ -53,8 +54,6 @@ export function useAnimationPreview({ enabled, animationId, settings, ledCount, 
     enabled,
     animationId,
     ledCount,
-    settings?.animationSpeed,
-    settings?.animationIntensity,
     settings?.animationReverse,
     settings?.stripOrigin,
     settings?.stripDirection,

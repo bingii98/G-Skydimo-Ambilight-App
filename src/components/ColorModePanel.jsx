@@ -7,9 +7,8 @@ import {
   IconMovie,
   IconPalette,
 } from "@tabler/icons-react";
-import { ANIMATION_IDS } from "../lib/animations";
-import { buildAnimationSwitchPatch } from "../lib/animationColors";
 import { COLOR_MODES, ensureLedColors } from "../lib/ledLayout";
+import { buildModeSwitchPatch } from "../lib/modeColors";
 import { ensureHex } from "../lib/colorUtils";
 import { AnimationPanel } from "./AnimationPanel";
 import { ColorPickerPopover } from "./ColorPickerPopup";
@@ -50,40 +49,35 @@ export function ColorModePanel({
     if (nextMode === colorMode) return;
 
     if (nextMode === COLOR_MODES.LEDS) {
+      const patch = buildModeSwitchPatch(settings, nextMode, { ledCount });
       onChange({
-        colorMode: nextMode,
-        ledColors: ensureLedColors(settings, ledCount),
-        selectedLed: 0,
-        selectedLeds: [0],
+        ...patch,
+        ledColors: ensureLedColors(
+          { ...settings, ...patch, hex: patch.hex ?? settings.hex },
+          ledCount
+        ),
+        selectedLed: patch.selectedLed ?? 0,
+        selectedLeds: patch.selectedLeds ?? [patch.selectedLed ?? 0],
       });
       return;
     }
 
-    if (nextMode === COLOR_MODES.ANIMATION) {
-      const patch = { colorMode: nextMode, selectedLeds: null };
-      const nextAnimationId = settings.animationId || ANIMATION_IDS.RAINBOW;
-      Object.assign(patch, buildAnimationSwitchPatch(settings, nextAnimationId));
-      onChange(patch);
-      return;
-    }
-
-    if (nextMode === COLOR_MODES.SCREEN) {
-      onChange({ colorMode: nextMode, selectedLeds: null });
-      return;
-    }
-
-    onChange({ colorMode: nextMode, selectedLeds: null });
+    onChange(buildModeSwitchPatch(settings, nextMode, { ledCount }));
   };
 
+  const modeIndex = Math.max(0, MODE_OPTIONS.findIndex(({ id }) => id === colorMode));
+
   return (
-    <section className="color-section color-mode-section">
+    <section className="color-section color-mode-section ui-section-enter">
       <SectionLabel icon={IconBrush}>Paint target</SectionLabel>
 
       <div
         className="paint-mode-switch paint-mode-switch--quad"
         role="group"
         aria-label="Paint mode"
+        style={{ "--paint-mode-index": modeIndex, "--paint-mode-cols": MODE_OPTIONS.length }}
       >
+        <span className="paint-mode-switch__indicator" aria-hidden />
         {MODE_OPTIONS.map(({ id, label, icon: Icon, hint }) => (
           <Tooltip key={id} label={hint} openDelay={400}>
             <button
@@ -102,7 +96,7 @@ export function ColorModePanel({
       </div>
 
       {colorMode === COLOR_MODES.SINGLE && (
-        <div className="paint-mode-panel paint-mode-panel--single">
+        <div key={colorMode} className="paint-mode-panel paint-mode-panel--single ui-panel-enter">
           <div className="single-mode-hero">
             <ColorPickerPopover
               hex={settings.hex}
@@ -136,13 +130,13 @@ export function ColorModePanel({
       )}
 
       {colorMode === COLOR_MODES.ANIMATION && (
-        <div className="paint-mode-panel paint-mode-panel--animation">
+        <div key={colorMode} className="paint-mode-panel paint-mode-panel--animation ui-panel-enter">
           <AnimationPanel settings={settings} onChange={onChange} onColorChange={onColorChange} />
         </div>
       )}
 
       {colorMode === COLOR_MODES.SCREEN && (
-        <div className="paint-mode-panel paint-mode-panel--screen">
+        <div key={colorMode} className="paint-mode-panel paint-mode-panel--screen ui-panel-enter">
           <ScreenSyncPanel
             settings={settings}
             onChange={onChange}

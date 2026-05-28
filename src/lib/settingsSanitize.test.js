@@ -2,6 +2,20 @@ import { describe, expect, it } from "vitest";
 import { sanitizeSettings } from "./settingsSanitize";
 
 describe("sanitizeSettings", () => {
+  it("restores single hex from modeColors during sanitize", () => {
+    const result = sanitizeSettings({
+      hex: "#00CCAA",
+      colorMode: "single",
+      modeColors: {
+        single: { hex: "#FF0000" },
+      },
+      animationId: "breathe",
+    });
+
+    expect(result.hex).toBe("#FF0000");
+    expect(result.modeColors.single.hex).toBe("#FF0000");
+  });
+
   it("preserves hex changes in single color mode when animation palette is stored", () => {
     const result = sanitizeSettings({
       hex: "#FF0000",
@@ -47,6 +61,12 @@ describe("sanitizeSettings", () => {
     });
 
     expect(result.orientationConfirmed).toBe(true);
+  });
+
+  it("coerces invalid color scheme preferences to system", () => {
+    expect(sanitizeSettings({ colorScheme: "invalid" }).colorScheme).toBe("system");
+    expect(sanitizeSettings({ colorScheme: "dark" }).colorScheme).toBe("dark");
+    expect(sanitizeSettings({ colorScheme: "light" }).colorScheme).toBe("light");
   });
 
   it("migrates deprecated animation ids and palettes", () => {

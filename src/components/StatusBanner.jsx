@@ -13,25 +13,25 @@ const VARIANTS = {
     accent: "var(--sk-live)",
     accentSoft: "rgba(14, 165, 233, 0.14)",
     border: "rgba(14, 165, 233, 0.22)",
-    bg: "linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(240, 249, 255, 0.92) 100%)",
+    bg: "linear-gradient(135deg, var(--sk-bg-panel) 0%, color-mix(in srgb, var(--sk-bg-panel) 88%, var(--sk-live)) 100%)",
   },
   warning: {
     accent: "var(--sk-warning)",
     accentSoft: "rgba(217, 119, 6, 0.14)",
     border: "rgba(217, 119, 6, 0.24)",
-    bg: "linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(255, 251, 235, 0.94) 100%)",
+    bg: "linear-gradient(135deg, var(--sk-bg-panel) 0%, color-mix(in srgb, var(--sk-bg-panel) 88%, var(--sk-warning)) 100%)",
   },
   danger: {
     accent: "var(--sk-danger)",
     accentSoft: "rgba(220, 38, 38, 0.12)",
     border: "rgba(220, 38, 38, 0.22)",
-    bg: "linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(254, 242, 242, 0.94) 100%)",
+    bg: "linear-gradient(135deg, var(--sk-bg-panel) 0%, color-mix(in srgb, var(--sk-bg-panel) 88%, var(--sk-danger)) 100%)",
   },
   success: {
     accent: "var(--sk-success)",
     accentSoft: "rgba(22, 163, 74, 0.12)",
     border: "rgba(22, 163, 74, 0.22)",
-    bg: "linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(240, 253, 244, 0.94) 100%)",
+    bg: "linear-gradient(135deg, var(--sk-bg-panel) 0%, color-mix(in srgb, var(--sk-bg-panel) 88%, var(--sk-success)) 100%)",
   },
 };
 
@@ -78,7 +78,7 @@ export function StatusBanner({
           variant="light"
           color={ACTION_COLORS[variant] || "teal"}
           size="compact-sm"
-          radius="xl"
+          radius="sm"
           className="status-banner__action"
           rightSection={<IconChevronRight size={14} />}
           onClick={action.onClick}

@@ -40,7 +40,7 @@ function ColorPickerPanel({ hex, hexDraft, onHexDraftChange, onCommitHexDraft, o
         }
         placeholder="FF8800"
         size="sm"
-        radius="md"
+        radius="sm"
         classNames={{ input: "inline-color-picker__hex-input" }}
         aria-label="Hex color code"
       />
@@ -104,7 +104,7 @@ export function ColorPickerPopover({
       position="bottom-start"
       width={280}
       shadow="md"
-      radius="lg"
+      radius="sm"
       trapFocus
       withinPortal
       floatingStrategy="fixed"

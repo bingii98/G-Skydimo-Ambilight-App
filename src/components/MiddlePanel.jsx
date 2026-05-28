@@ -74,15 +74,16 @@ export function MiddlePanel({
                 value={portFilter}
                 onChange={(e) => onPortFilterChange(e.currentTarget.value)}
                 leftSection={<IconSearch size={15} stroke={1.6} />}
-                radius="xl"
+                radius="sm"
                 size="xs"
               />
             )}
           </div>
 
           <ScrollArea className="middle-panel__body" type="auto" offsetScrollbars>
-            {nav === "devices" && (
-              <DevicePanel
+            <div key={nav} className="middle-panel__pane ui-panel-enter">
+              {nav === "devices" && (
+                <DevicePanel
                 state={state}
                 selectedPort={selectedPort}
                 settings={settings}
@@ -97,11 +98,11 @@ export function MiddlePanel({
                 onRestoreAfterCalibrate={onRestoreAfterCalibrate}
                 ledOn={ledOn}
                 onToggleLedPower={onToggleLedPower}
-              />
-            )}
+                />
+              )}
 
-            {nav === "settings" && (
-              <SettingsPanel
+              {nav === "settings" && (
+                <SettingsPanel
                 settings={settings}
                 onChange={onSettingsChange}
                 startupError={startupError}
@@ -111,11 +112,11 @@ export function MiddlePanel({
                 onConnect={onConnect}
                 onSyncOptions={onSyncOptions}
                 portFilter={portFilter}
-              />
-            )}
+                />
+              )}
 
-            {nav === "studio" && (
-              <div className="middle-list">
+              {nav === "studio" && (
+                <div className="middle-list">
                 {history.length > 0 && (
                   <div className="middle-list__toolbar">
                     <button type="button" className="color-studio__clear" onClick={onClearHistory}>
@@ -143,8 +144,9 @@ export function MiddlePanel({
                     </button>
                   ))
                 )}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </ScrollArea>
 
           {nav === "settings" && (

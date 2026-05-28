@@ -33,6 +33,9 @@ export const ANIMATION_IDS = {
   LIGHTNING: "lightning",
   SPECTRUM: "spectrum",
   FADE: "fade",
+  GLITTER: "glitter",
+  CASCADE: "cascade",
+  DISCO: "disco",
 };
 
 export const ANIMATION_GROUP_IDS = {
@@ -164,6 +167,27 @@ export const ANIMATIONS = [
     group: ANIMATION_GROUP_IDS.FLOW,
     colorPalette: ANIMATION_PALETTE.MULTI,
   },
+  {
+    id: ANIMATION_IDS.GLITTER,
+    label: "Glitter",
+    hint: "Shimmering sparkle band sweeps the strip",
+    group: ANIMATION_GROUP_IDS.GLOW,
+    colorPalette: ANIMATION_PALETTE.MULTI,
+  },
+  {
+    id: ANIMATION_IDS.CASCADE,
+    label: "Cascade",
+    hint: "Flowing color drops around the perimeter",
+    group: ANIMATION_GROUP_IDS.FLOW,
+    colorPalette: ANIMATION_PALETTE.MULTI,
+  },
+  {
+    id: ANIMATION_IDS.DISCO,
+    label: "Disco",
+    hint: "Random palette blocks flash like a dance floor",
+    group: ANIMATION_GROUP_IDS.FLASH,
+    colorPalette: ANIMATION_PALETTE.MULTI,
+  },
 ];
 
 export function filterAnimations({ group = ANIMATION_GROUP_IDS.ALL, query = "" } = {}) {
@@ -204,13 +228,16 @@ export function isValidAnimationId(id) {
   return typeof id === "string" && VALID_ANIMATION_IDS.has(id);
 }
 
-/** Map slider 1–100 to time multiplier (~0.01× … ~2.5×). Power curve keeps 1% very slow. */
+/** Global speed gain applied on top of the slider curve. */
+const ANIMATION_SPEED_GAIN = 1.3;
+
+/** Map slider 1–100 to time multiplier (~0.013× … ~3.25×). Power curve keeps 1% very slow. */
 export function animationSpeedFactor(speed = 50) {
   const clamped = Math.max(1, Math.min(100, Number(speed) || 50));
   const normalized = clamped / 100;
   const min = 0.01;
   const max = 2.5;
-  return min + normalized ** 3 * (max - min);
+  return (min + normalized ** 3 * (max - min)) * ANIMATION_SPEED_GAIN;
 }
 
 /** Map slider 1–100 to effect strength (~0.1 … 1). */
@@ -527,6 +554,59 @@ export function buildAnimationPixels({ animationId, ledCount, settings, timeMs, 
       const hex = mixHex(colors[idx], colors[nextIdx], blend);
       for (let i = 0; i < count; i += 1) {
         writePixel(pixels, i, hex, brightness);
+      }
+      break;
+    }
+
+    case ANIMATION_IDS.GLITTER: {
+      const bandWidth = Math.max(2, Math.round(2 + intensity * 6));
+      const headPhase = wrapMix(t * loopRate * (0.9 + intensity * 0.4) * direction);
+      for (let i = 0; i < count; i += 1) {
+        const dist = animationPhaseDistance(headPhase, perimeterPhases[i], direction) * count;
+        const inBand = dist < bandWidth;
+        const spark = seededRandom(i * 23.1 + Math.floor(t * (14 + intensity * 10)));
+        const glitter = inBand ? 0.45 + spark * 0.55 : spark > 0.965 - intensity * 0.02 ? 0.28 : 0.04;
+        const hex = inBand ? mixHex(primary, sample(spark), 0.35 + spark * 0.35) : secondary;
+        writePixel(pixels, i, hex, brightness * glitter);
+      }
+      break;
+    }
+
+    case ANIMATION_IDS.CASCADE: {
+      const segmentLen = Math.max(2, Math.round(2 + intensity * 5));
+      const waveCount = Math.max(2, Math.round(2 + intensity * 3));
+      for (let i = 0; i < count; i += 1) {
+        const ledPhase = directedPhase(perimeterPhases, i, direction);
+        let level = 0.05;
+        let color = secondary;
+        for (let w = 0; w < waveCount; w += 1) {
+          const offset = w / waveCount;
+          const dropPhase = wrapMix((t * loopRate * (0.65 + w * 0.08) + offset) * direction);
+          const dist = animationPhaseDistance(dropPhase, ledPhase, direction) * count;
+          if (dist < segmentLen) {
+            const fade = 1 - dist / segmentLen;
+            const boost = fade * (0.35 + intensity * 0.55);
+            if (boost > level) {
+              level = boost;
+              color = sample(w / waveCount + fade * 0.25);
+            }
+          }
+        }
+        writePixel(pixels, i, color, brightness * level);
+      }
+      break;
+    }
+
+    case ANIMATION_IDS.DISCO: {
+      const blockSize = Math.max(1, Math.round(1 + (1 - intensity) * 4));
+      const flashRate = 3 + intensity * 14;
+      for (let i = 0; i < count; i += 1) {
+        const block = Math.floor(i / blockSize);
+        const seed = block * 31.7 + Math.floor(t * flashRate);
+        const flash = seededRandom(seed);
+        const on = flash > 0.52 - intensity * 0.22;
+        const color = pickAnimationPaletteColor(palette.stops, seed + 0.5);
+        writePixel(pixels, i, on ? color : "#000000", brightness * (on ? 0.65 + flash * 0.35 : 0.03));
       }
       break;
     }

@@ -1,18 +1,25 @@
 import { Tooltip } from "@mantine/core";
-import { IconPalette, IconPlugConnected, IconSettings } from "@tabler/icons-react";
+import { IconDeviceDesktop, IconPalette, IconSettings } from "@tabler/icons-react";
 
 const NAV_ITEMS = [
-  { id: "devices", label: "Devices", icon: IconPlugConnected },
+  { id: "devices", label: "Devices", icon: IconDeviceDesktop },
   { id: "studio", label: "Color control", icon: IconPalette },
   { id: "settings", label: "Settings", icon: IconSettings },
 ];
 
 export function NavRail({ active, onChange, connected, embedded = false }) {
+  const activeIndex = Math.max(
+    0,
+    NAV_ITEMS.findIndex(({ id }) => id === active)
+  );
+
   return (
     <nav
       className={`nav-rail${embedded ? " nav-rail--embedded" : ""}`}
       aria-label="Navigation"
+      style={embedded ? { "--nav-active-index": activeIndex } : undefined}
     >
+      {embedded ? <span className="nav-rail__indicator" aria-hidden /> : null}
       <div className="nav-rail__top">
         {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
           <Tooltip key={id} label={label} position="right" withArrow openDelay={300}>

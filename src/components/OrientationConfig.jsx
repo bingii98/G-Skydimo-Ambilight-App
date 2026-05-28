@@ -244,7 +244,7 @@ export function OrientationConfig({
     try {
       await onTestZones({
         onZoneFlash: (zone) => {
-          setZoneTestActive(zone?.wireSide ?? zone?.id ?? null);
+          setZoneTestActive(zone?.id ?? null);
           setZoneTestIndices(zone?.indices ?? null);
         },
         onComplete: () => {

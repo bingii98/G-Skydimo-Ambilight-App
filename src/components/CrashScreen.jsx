@@ -107,7 +107,7 @@ export function CrashScreen({ error, errorInfo, onReload, onResetAndReload }) {
               <Button
                 leftSection={<IconRefresh size={16} stroke={1.75} />}
                 color="teal"
-                radius="xl"
+                radius="sm"
                 onClick={onReload}
               >
                 Reload app
@@ -116,7 +116,7 @@ export function CrashScreen({ error, errorInfo, onReload, onResetAndReload }) {
               <Button
                 variant="light"
                 color="red"
-                radius="xl"
+                radius="sm"
                 leftSection={<IconTrash size={16} stroke={1.75} />}
                 onClick={onResetAndReload}
               >
@@ -126,7 +126,7 @@ export function CrashScreen({ error, errorInfo, onReload, onResetAndReload }) {
               <Button
                 variant="subtle"
                 color="gray"
-                radius="xl"
+                radius="sm"
                 leftSection={copied ? <IconCheck size={16} stroke={1.75} /> : <IconCopy size={16} stroke={1.75} />}
                 onClick={handleCopy}
               >

@@ -32,22 +32,53 @@ export function AppSlider({
 }) {
   const savedValue = clampSliderValue(value, min, max);
   const [liveValue, setLiveValue] = useState(savedValue);
-  const [isDragging, setIsDragging] = useState(false);
   const draggingRef = useRef(false);
   const pendingRef = useRef(savedValue);
+  const rootRef = useRef(null);
+  const previewFrameRef = useRef(null);
+
+  const setDragging = useCallback((dragging) => {
+    draggingRef.current = dragging;
+    rootRef.current?.classList.toggle("app-slider--dragging", dragging);
+  }, []);
+
+  const emitPreview = useCallback(
+    (next) => {
+      onPreview?.(next);
+      onLiveChange?.(next);
+    },
+    [onLiveChange, onPreview]
+  );
+
+  const schedulePreview = useCallback(
+    (next) => {
+      if (previewFrameRef.current != null) {
+        return;
+      }
+
+      previewFrameRef.current = requestAnimationFrame(() => {
+        previewFrameRef.current = null;
+        emitPreview(pendingRef.current);
+      });
+    },
+    [emitPreview]
+  );
 
   const commit = useCallback(
     (nextRaw) => {
+      if (previewFrameRef.current != null) {
+        cancelAnimationFrame(previewFrameRef.current);
+        previewFrameRef.current = null;
+      }
+
       const next = clampSliderValue(nextRaw, min, max);
-      draggingRef.current = false;
-      setIsDragging(false);
+      setDragging(false);
       pendingRef.current = next;
       setLiveValue(next);
-      onLiveChange?.(next);
-      onPreview?.(next);
+      emitPreview(next);
       onChange?.(next);
     },
-    [min, max, onChange, onLiveChange, onPreview]
+    [emitPreview, min, max, onChange, setDragging]
   );
 
   useEffect(() => {
@@ -56,8 +87,7 @@ export function AppSlider({
     }
     pendingRef.current = savedValue;
     setLiveValue(savedValue);
-    onLiveChange?.(savedValue);
-  }, [savedValue, onLiveChange]);
+  }, [savedValue]);
 
   useEffect(() => {
     const finishDrag = () => {
@@ -72,20 +102,24 @@ export function AppSlider({
     return () => {
       window.removeEventListener("pointerup", finishDrag);
       window.removeEventListener("mouseup", finishDrag);
+      if (previewFrameRef.current != null) {
+        cancelAnimationFrame(previewFrameRef.current);
+        previewFrameRef.current = null;
+      }
     };
   }, [commit]);
 
   const beginDrag = useCallback(() => {
-    if (disabled) {
+    if (disabled || draggingRef.current) {
       return;
     }
-    draggingRef.current = true;
-    setIsDragging(true);
-  }, [disabled]);
+    setDragging(true);
+  }, [disabled, setDragging]);
 
   return (
     <div
-      className={`app-slider${isDragging ? " app-slider--dragging" : ""}`}
+      ref={rootRef}
+      className="app-slider"
       onPointerDown={beginDrag}
     >
       <Slider
@@ -94,8 +128,7 @@ export function AppSlider({
           beginDrag();
           pendingRef.current = next;
           setLiveValue(next);
-          onLiveChange?.(next);
-          onPreview?.(next);
+          schedulePreview(next);
         }}
         onChangeEnd={(next) => {
           pendingRef.current = next;

@@ -17,7 +17,7 @@ import { buildAnimationPerimeterPhases } from "./animationSpatial";
 
 describe("animations", () => {
   it("includes compact effect catalog", () => {
-    expect(ANIMATIONS).toHaveLength(16);
+    expect(ANIMATIONS).toHaveLength(19);
     expect(isValidAnimationId(ANIMATION_IDS.AURORA)).toBe(true);
     expect(isValidAnimationId(ANIMATION_IDS.HEARTBEAT)).toBe(true);
     expect(isValidAnimationId(ANIMATION_IDS.METEOR)).toBe(true);
@@ -36,9 +36,9 @@ describe("animations", () => {
   });
 
   it("maps speed and intensity sliders", () => {
-    expect(animationSpeedFactor(1)).toBeCloseTo(0.01, 3);
-    expect(animationSpeedFactor(50)).toBeCloseTo(0.321, 2);
-    expect(animationSpeedFactor(100)).toBeCloseTo(2.5, 3);
+    expect(animationSpeedFactor(1)).toBeCloseTo(0.013, 3);
+    expect(animationSpeedFactor(50)).toBeCloseTo(0.417, 2);
+    expect(animationSpeedFactor(100)).toBeCloseTo(3.25, 2);
     expect(animationIntensityFactor(1)).toBeCloseTo(0.109, 3);
     expect(animationIntensityFactor(100)).toBeCloseTo(1, 3);
   });

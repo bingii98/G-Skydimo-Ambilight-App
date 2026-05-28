@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { SK0L27_ZONES } from "./ledMaps/SK0L27";
 import { getProfileZones, getWireOrderedZones } from "./ledLayout";
 import { buildAnimationPerimeterPhases } from "./animationSpatial";
 
@@ -15,7 +14,7 @@ describe("animationSpatial", () => {
     expect(Math.max(...phases)).toBe(1);
   });
 
-  it("uses firmware bottom indices for SK0L27", () => {
+  it("uses strip-layout bottom indices for wire-ordered zones", () => {
     const settings = { stripOrigin: "bottom-left", stripDirection: "cw", stripCounts: {
       top: 16, right: 32, bottom: 16, left: 32,
     }};
@@ -23,7 +22,9 @@ describe("animationSpatial", () => {
       (zone) => zone.wireSide === "bottom"
     )?.indices;
 
-    expect(bottom).toEqual(SK0L27_ZONES.find((zone) => zone.id === "bottom")?.indices);
+    expect(bottom).toEqual(
+      Array.from({ length: 16 }, (_, offset) => 80 + offset)
+    );
   });
 
   it("keeps SK0L27 bottom wire indices monotonic in firmware order", () => {

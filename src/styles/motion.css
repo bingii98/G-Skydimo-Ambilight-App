@@ -1,0 +1,1140 @@
+/* ── Global motion tokens & UI animations ── */
+
+:root {
+  --sk-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --sk-ease-spring: cubic-bezier(0.34, 1.28, 0.64, 1);
+  --sk-duration-fast: 0.15s;
+  --sk-duration-normal: 0.28s;
+  --sk-duration-slow: 0.42s;
+  --sk-nav-btn-size: 40px;
+  --sk-nav-btn-gap: 4px;
+}
+
+/* ── Ambient background drift ── */
+
+.app-ambient__mesh {
+  animation: ambient-mesh-drift 32s ease-in-out infinite alternate;
+}
+
+.app-ambient__glow {
+  animation: ambient-glow-breathe 8s ease-in-out infinite;
+}
+
+@keyframes ambient-mesh-drift {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(2%, -1.5%) scale(1.03);
+  }
+
+  100% {
+    transform: translate(-1.5%, 2%) scale(1.01);
+  }
+}
+
+@keyframes ambient-glow-breathe {
+  0%,
+  100% {
+    opacity: 0.1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  50% {
+    opacity: 0.16;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+}
+
+/* ── App shell entrance ── */
+
+.ui-app-enter {
+  animation: ui-app-enter var(--sk-duration-slow) var(--sk-ease-out) both;
+}
+
+.ui-app-enter > .middle-panel {
+  animation: ui-panel-slide-in var(--sk-duration-slow) var(--sk-ease-out) 0.06s both;
+}
+
+.ui-app-enter > .color-studio {
+  animation: ui-panel-slide-in var(--sk-duration-slow) var(--sk-ease-out) 0.12s both;
+}
+
+@keyframes ui-app-enter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ui-panel-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Panel content crossfade ── */
+
+.ui-panel-enter {
+  animation: ui-panel-enter var(--sk-duration-normal) var(--sk-ease-out) both;
+}
+
+@keyframes ui-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Nav rail sliding indicator ── */
+
+.nav-rail--embedded {
+  position: relative;
+}
+
+.nav-rail__indicator {
+  position: absolute;
+  left: 50%;
+  top: var(--sk-space-sm);
+  width: var(--sk-nav-btn-size);
+  height: var(--sk-nav-btn-size);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--sk-accent) 14%, var(--sk-bg-panel));
+  border: 1px solid color-mix(in srgb, var(--sk-accent) 22%, transparent);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--sk-accent) 12%, transparent);
+  transform: translateX(-50%) translateY(calc(var(--nav-active-index, 0) * (var(--sk-nav-btn-size) + var(--sk-nav-btn-gap))));
+  transition: transform var(--sk-duration-normal) var(--sk-ease-spring);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.nav-rail--embedded .nav-rail__btn {
+  position: relative;
+  z-index: 1;
+}
+
+.nav-rail--embedded .nav-rail__btn--active {
+  background: transparent;
+  color: var(--sk-accent);
+}
+
+.nav-rail--embedded .nav-rail__btn:active {
+  transform: scale(0.94);
+}
+
+/* ── Staggered list rows ── */
+
+.middle-list .list-row {
+  animation: ui-stagger-in var(--sk-duration-normal) var(--sk-ease-out) both;
+}
+
+.middle-list .list-row:nth-child(1) {
+  animation-delay: 0.02s;
+}
+
+.middle-list .list-row:nth-child(2) {
+  animation-delay: 0.05s;
+}
+
+.middle-list .list-row:nth-child(3) {
+  animation-delay: 0.08s;
+}
+
+.middle-list .list-row:nth-child(4) {
+  animation-delay: 0.11s;
+}
+
+.middle-list .list-row:nth-child(5) {
+  animation-delay: 0.14s;
+}
+
+.middle-list .list-row:nth-child(6) {
+  animation-delay: 0.17s;
+}
+
+.middle-list .list-row:nth-child(7) {
+  animation-delay: 0.2s;
+}
+
+.middle-list .list-row:nth-child(8) {
+  animation-delay: 0.23s;
+}
+
+.middle-list .list-row:nth-child(n + 9) {
+  animation-delay: 0.26s;
+}
+
+@keyframes ui-stagger-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ── Interactive polish ── */
+
+.list-row {
+  transition:
+    background var(--sk-duration-fast) ease,
+    box-shadow var(--sk-duration-fast) ease,
+    transform var(--sk-duration-fast) var(--sk-ease-out);
+}
+
+.list-row:hover {
+  transform: translateX(2px);
+}
+
+.list-row__swatch {
+  transition:
+    transform var(--sk-duration-normal) var(--sk-ease-spring),
+    box-shadow var(--sk-duration-normal) ease;
+}
+
+.list-row:hover .list-row__swatch,
+.list-row--active .list-row__swatch {
+  transform: scale(1.06);
+  box-shadow:
+    0 4px 14px color-mix(in srgb, var(--glow-color, var(--sk-accent)) 28%, transparent),
+    var(--sk-shadow-sm);
+}
+
+.middle-panel,
+.color-studio {
+  transition:
+    box-shadow var(--sk-duration-normal) ease,
+    border-color var(--sk-duration-normal) ease;
+}
+
+.color-studio {
+  position: relative;
+  overflow: hidden;
+}
+
+.color-studio::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--glow-color, var(--sk-accent)) 45%, transparent),
+    transparent
+  );
+  opacity: 0.7;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.app-status-dot--online {
+  animation: status-dot-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes status-dot-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--sk-success) 20%, transparent);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 5px color-mix(in srgb, var(--sk-success) 10%, transparent),
+      0 0 10px color-mix(in srgb, var(--sk-success) 35%, transparent);
+  }
+}
+
+.nav-rail__dot {
+  animation: nav-dot-pulse 2s ease-in-out infinite;
+}
+
+@keyframes nav-dot-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+.preview-orb:not(.preview-orb--pulse) {
+  animation: preview-orb-idle 4.5s ease-in-out infinite;
+}
+
+.preview-orb__halo {
+  animation: preview-halo-idle 4.5s ease-in-out infinite;
+}
+
+@keyframes preview-orb-idle {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.025);
+  }
+}
+
+@keyframes preview-halo-idle {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(1.06);
+  }
+}
+
+.animation-effect-chip {
+  transition:
+    background var(--sk-duration-fast) ease,
+    border-color var(--sk-duration-fast) ease,
+    color var(--sk-duration-fast) ease,
+    transform var(--sk-duration-fast) var(--sk-ease-spring),
+    box-shadow var(--sk-duration-fast) ease;
+}
+
+.animation-effect-chip:hover {
+  transform: translateY(-2px);
+}
+
+.animation-effect-chip:active {
+  transform: translateY(0) scale(0.97);
+}
+
+@keyframes effect-chip-select {
+  0% {
+    transform: scale(0.94);
+  }
+
+  60% {
+    transform: scale(1.03);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animation-effect-grid .animation-effect-chip {
+  animation: ui-stagger-in var(--sk-duration-normal) var(--sk-ease-out) both;
+}
+
+.animation-effect-grid .animation-effect-chip:nth-child(1) {
+  animation-delay: 0.01s;
+}
+
+.animation-effect-grid .animation-effect-chip:nth-child(2) {
+  animation-delay: 0.03s;
+}
+
+.animation-effect-grid .animation-effect-chip:nth-child(3) {
+  animation-delay: 0.05s;
+}
+
+.animation-effect-grid .animation-effect-chip:nth-child(4) {
+  animation-delay: 0.07s;
+}
+
+.animation-effect-grid .animation-effect-chip:nth-child(5) {
+  animation-delay: 0.09s;
+}
+
+.animation-effect-grid .animation-effect-chip:nth-child(6) {
+  animation-delay: 0.11s;
+}
+
+.animation-effect-grid .animation-effect-chip:nth-child(7) {
+  animation-delay: 0.13s;
+}
+
+.animation-effect-grid .animation-effect-chip:nth-child(8) {
+  animation-delay: 0.15s;
+}
+
+.animation-effect-grid .animation-effect-chip:nth-child(n + 9) {
+  animation-delay: 0.17s;
+}
+
+.animation-effect-grid .animation-effect-chip--active {
+  animation: effect-chip-select 0.32s var(--sk-ease-spring) both;
+}
+
+.animation-customize {
+  animation: ui-panel-enter var(--sk-duration-normal) var(--sk-ease-out) both;
+}
+
+.soft-info-card,
+.device-card {
+  transition:
+    transform var(--sk-duration-fast) var(--sk-ease-out),
+    box-shadow var(--sk-duration-normal) ease,
+    border-color var(--sk-duration-fast) ease;
+}
+
+.soft-info-card:hover,
+.device-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--sk-shadow);
+}
+
+.panel-title__icon {
+  transition: transform var(--sk-duration-normal) var(--sk-ease-spring);
+}
+
+.middle-panel__head:hover .panel-title__icon {
+  transform: scale(1.06) rotate(-4deg);
+}
+
+.mantine-Button-root:not(:disabled) {
+  transition:
+    transform var(--sk-duration-fast) var(--sk-ease-out),
+    background var(--sk-duration-fast) ease,
+    border-color var(--sk-duration-fast) ease !important;
+}
+
+.mantine-Button-root:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+/* ── Utility: stagger children ── */
+
+.ui-stagger-children > * {
+  animation: ui-stagger-in var(--sk-duration-normal) var(--sk-ease-out) both;
+}
+
+.ui-stagger-children > *:nth-child(1) {
+  animation-delay: 0.04s;
+}
+
+.ui-stagger-children > *:nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.ui-stagger-children > *:nth-child(3) {
+  animation-delay: 0.12s;
+}
+
+.ui-stagger-children > *:nth-child(4) {
+  animation-delay: 0.16s;
+}
+
+.ui-stagger-children > *:nth-child(5) {
+  animation-delay: 0.2s;
+}
+
+.ui-stagger-children > *:nth-child(n + 6) {
+  animation-delay: 0.24s;
+}
+
+.ui-section-enter {
+  animation: ui-panel-enter var(--sk-duration-normal) var(--sk-ease-out) both;
+}
+
+/* ── Paint mode switch (sliding pill) ── */
+
+.paint-mode-switch {
+  position: relative;
+}
+
+.paint-mode-switch__indicator {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc((100% - 8px - (var(--paint-mode-cols, 4) - 1) * 4px) / var(--paint-mode-cols, 4));
+  border-radius: 999px;
+  background: var(--sk-bg-panel);
+  box-shadow: var(--sk-shadow-sm);
+  transform: translateX(calc(var(--paint-mode-index, 0) * (100% + 4px)));
+  transition: transform var(--sk-duration-normal) var(--sk-ease-spring);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.paint-mode-switch__btn {
+  position: relative;
+  z-index: 1;
+}
+
+.paint-mode-switch__btn--active {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.paint-mode-switch__btn:active:not(.paint-mode-switch__btn--active) {
+  transform: scale(0.96);
+}
+
+.paint-mode-switch__btn--active .paint-mode-switch__icon {
+  animation: ui-icon-pop 0.32s var(--sk-ease-spring) both;
+}
+
+@keyframes ui-icon-pop {
+  0% {
+    transform: scale(0.85);
+  }
+
+  60% {
+    transform: scale(1.08);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.paint-mode-panel {
+  animation: ui-panel-enter var(--sk-duration-normal) var(--sk-ease-out) both;
+}
+
+.single-mode-hero__swatch {
+  transition:
+    transform var(--sk-duration-normal) var(--sk-ease-spring),
+    box-shadow var(--sk-duration-normal) ease;
+}
+
+.single-mode-hero__swatch:hover {
+  transform: scale(1.06);
+  box-shadow:
+    0 6px 22px color-mix(in srgb, var(--swatch-color, var(--sk-accent)) 45%, transparent),
+    inset 0 -2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.single-mode-hero__swatch:active {
+  transform: scale(0.98);
+}
+
+.single-mode-cta {
+  transition:
+    background var(--sk-duration-fast) ease,
+    border-color var(--sk-duration-fast) ease,
+    transform var(--sk-duration-fast) var(--sk-ease-out),
+    box-shadow var(--sk-duration-fast) ease;
+}
+
+.single-mode-cta:hover {
+  transform: translateY(-1px);
+}
+
+.single-mode-cta:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.single-mode-cta svg {
+  transition: transform var(--sk-duration-normal) var(--sk-ease-out);
+}
+
+.single-mode-cta:hover svg {
+  transform: translateX(3px);
+}
+
+/* ── Preset & history chips ── */
+
+.preset-grid .preset-chip {
+  animation: ui-scale-in var(--sk-duration-normal) var(--sk-ease-out) both;
+}
+
+.preset-grid .preset-chip:nth-child(1) {
+  animation-delay: 0.02s;
+}
+
+.preset-grid .preset-chip:nth-child(2) {
+  animation-delay: 0.04s;
+}
+
+.preset-grid .preset-chip:nth-child(3) {
+  animation-delay: 0.06s;
+}
+
+.preset-grid .preset-chip:nth-child(4) {
+  animation-delay: 0.08s;
+}
+
+.preset-grid .preset-chip:nth-child(5) {
+  animation-delay: 0.1s;
+}
+
+.preset-grid .preset-chip:nth-child(6) {
+  animation-delay: 0.12s;
+}
+
+.preset-grid .preset-chip:nth-child(7) {
+  animation-delay: 0.14s;
+}
+
+.preset-grid .preset-chip:nth-child(8) {
+  animation-delay: 0.16s;
+}
+
+.preset-grid .preset-chip:nth-child(n + 9) {
+  animation-delay: 0.18s;
+}
+
+@keyframes ui-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.preset-chip {
+  transition:
+    transform var(--sk-duration-fast) var(--sk-ease-spring),
+    box-shadow var(--sk-duration-fast) ease,
+    border-color var(--sk-duration-fast) ease;
+}
+
+.preset-chip:active {
+  transform: scale(0.92);
+}
+
+.preset-chip--active {
+  animation: ui-select-pop 0.28s var(--sk-ease-spring) both;
+}
+
+.history-chip {
+  transition:
+    transform var(--sk-duration-fast) var(--sk-ease-spring),
+    border-color var(--sk-duration-fast) ease,
+    box-shadow var(--sk-duration-fast) ease;
+}
+
+.history-chip:hover {
+  transform: scale(1.1);
+}
+
+.history-chip:active {
+  transform: scale(0.94);
+}
+
+@keyframes ui-select-pop {
+  0% {
+    transform: scale(0.9);
+  }
+
+  55% {
+    transform: scale(1.06);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ── Port rows ── */
+
+.connection-settings .port-row,
+.device-panel .port-row {
+  animation: ui-stagger-in var(--sk-duration-normal) var(--sk-ease-out) both;
+}
+
+.connection-settings .port-row:nth-child(1),
+.device-panel .port-row:nth-child(1) {
+  animation-delay: 0.03s;
+}
+
+.connection-settings .port-row:nth-child(2),
+.device-panel .port-row:nth-child(2) {
+  animation-delay: 0.06s;
+}
+
+.connection-settings .port-row:nth-child(3),
+.device-panel .port-row:nth-child(3) {
+  animation-delay: 0.09s;
+}
+
+.connection-settings .port-row:nth-child(n + 4),
+.device-panel .port-row:nth-child(n + 4) {
+  animation-delay: 0.12s;
+}
+
+.port-row {
+  transition:
+    background var(--sk-duration-fast) ease,
+    border-color var(--sk-duration-fast) ease,
+    box-shadow var(--sk-duration-fast) ease,
+    transform var(--sk-duration-fast) var(--sk-ease-out);
+}
+
+.port-row:hover {
+  transform: translateX(3px);
+}
+
+.port-row--selected {
+  animation: ui-select-pop 0.26s var(--sk-ease-spring) both;
+}
+
+.port-row__avatar {
+  transition:
+    background var(--sk-duration-normal) ease,
+    border-color var(--sk-duration-normal) ease,
+    color var(--sk-duration-normal) ease,
+    transform var(--sk-duration-normal) var(--sk-ease-spring);
+}
+
+.port-row:hover .port-row__avatar {
+  transform: scale(1.05);
+}
+
+/* ── Gradient editor ── */
+
+.gradient-stop-chip {
+  transition:
+    background var(--sk-duration-fast) ease,
+    border-color var(--sk-duration-fast) ease,
+    transform var(--sk-duration-fast) var(--sk-ease-spring),
+    box-shadow var(--sk-duration-fast) ease;
+}
+
+.gradient-stop-chip:hover {
+  transform: translateY(-1px);
+}
+
+.gradient-stop-chip--active {
+  animation: ui-select-pop 0.26s var(--sk-ease-spring) both;
+}
+
+.gradient-editor__tool-btn {
+  transition:
+    background var(--sk-duration-fast) ease,
+    border-color var(--sk-duration-fast) ease,
+    color var(--sk-duration-fast) ease,
+    transform var(--sk-duration-fast) var(--sk-ease-out) !important;
+}
+
+.gradient-editor__tool-btn:active:not(:disabled) {
+  transform: scale(0.94) !important;
+}
+
+.gradient-editor__handle-color {
+  transition: transform var(--sk-duration-fast) var(--sk-ease-spring);
+}
+
+/* ── Screen sync region cards ── */
+
+.screen-sync-region__option {
+  transition:
+    background var(--sk-duration-fast) ease,
+    border-color var(--sk-duration-fast) ease,
+    transform var(--sk-duration-fast) var(--sk-ease-spring),
+    box-shadow var(--sk-duration-fast) ease;
+}
+
+.screen-sync-region__option:hover {
+  transform: translateY(-2px);
+}
+
+.screen-sync-region__option--active {
+  animation: ui-select-pop 0.28s var(--sk-ease-spring) both;
+}
+
+.screen-sync-region__preview {
+  transition: transform var(--sk-duration-normal) var(--sk-ease-out);
+}
+
+.screen-sync-region__option:hover .screen-sync-region__preview {
+  transform: scale(1.04);
+}
+
+/* ── Animation panel filters & direction ── */
+
+.animation-effect-picker__filter {
+  transition:
+    background var(--sk-duration-fast) ease,
+    border-color var(--sk-duration-fast) ease,
+    color var(--sk-duration-fast) ease,
+    transform var(--sk-duration-fast) var(--sk-ease-out);
+}
+
+.animation-effect-picker__filter:active {
+  transform: scale(0.96);
+}
+
+.animation-effect-picker__filter--active {
+  animation: ui-select-pop 0.24s var(--sk-ease-spring) both;
+}
+
+.animation-direction__btn {
+  transition:
+    background var(--sk-duration-fast) ease,
+    border-color var(--sk-duration-fast) ease,
+    color var(--sk-duration-fast) ease,
+    box-shadow var(--sk-duration-fast) ease,
+    transform var(--sk-duration-fast) var(--sk-ease-out);
+}
+
+.animation-direction__btn:active {
+  transform: scale(0.94);
+}
+
+.animation-direction__btn--active {
+  animation: ui-select-pop 0.24s var(--sk-ease-spring) both;
+}
+
+/* ── Preview area ── */
+
+.preview-meta-card {
+  transition:
+    transform var(--sk-duration-fast) var(--sk-ease-out),
+    box-shadow var(--sk-duration-normal) ease,
+    border-color var(--sk-duration-fast) ease;
+}
+
+.preview-meta-card:hover {
+  transform: translateY(-1px);
+}
+
+.preview-compact__meta .preview-meta-card {
+  animation: ui-stagger-in var(--sk-duration-normal) var(--sk-ease-out) both;
+}
+
+.preview-compact__meta .preview-meta-card:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.preview-compact__meta .preview-meta-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.preview-compact__meta .preview-meta-card:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.preview-live-badge {
+  animation: ui-badge-in 0.32s var(--sk-ease-out) both;
+}
+
+@keyframes ui-badge-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.preview-led-dot {
+  transition: opacity var(--sk-duration-fast) ease, transform var(--sk-duration-fast) ease;
+}
+
+.preview-led-strip__dots:hover .preview-led-dot {
+  animation: ui-led-shimmer 1.2s ease-in-out infinite;
+}
+
+.preview-led-strip__dots:hover .preview-led-dot:nth-child(2n) {
+  animation-delay: 0.15s;
+}
+
+.preview-led-strip__dots:hover .preview-led-dot:nth-child(3n) {
+  animation-delay: 0.3s;
+}
+
+@keyframes ui-led-shimmer {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scaleY(0.85);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+/* ── Device card stats ── */
+
+.device-card__stat {
+  transition:
+    transform var(--sk-duration-fast) var(--sk-ease-out),
+    background var(--sk-duration-fast) ease,
+    border-color var(--sk-duration-fast) ease;
+  animation: ui-stagger-in var(--sk-duration-normal) var(--sk-ease-out) both;
+}
+
+.device-card__stat:nth-child(1) {
+  animation-delay: 0.06s;
+}
+
+.device-card__stat:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.device-card__stat:nth-child(3) {
+  animation-delay: 0.14s;
+}
+
+.device-card__stat:hover {
+  transform: translateY(-2px);
+}
+
+.device-card__stat-icon {
+  transition: transform var(--sk-duration-normal) var(--sk-ease-spring);
+}
+
+.device-card__stat:hover .device-card__stat-icon {
+  transform: scale(1.1);
+}
+
+/* ── Middle panel actions ── */
+
+.middle-panel__action-btn {
+  transition:
+    background var(--sk-duration-fast) ease,
+    border-color var(--sk-duration-fast) ease,
+    color var(--sk-duration-fast) ease,
+    transform var(--sk-duration-fast) var(--sk-ease-out),
+    box-shadow var(--sk-duration-fast) ease;
+}
+
+.middle-panel__action-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.middle-panel__action-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+}
+
+/* ── Color swatch & picker ── */
+
+.color-swatch-trigger {
+  transition:
+    transform var(--sk-duration-normal) var(--sk-ease-spring),
+    box-shadow var(--sk-duration-normal) ease,
+    border-color var(--sk-duration-fast) ease;
+}
+
+.color-swatch-trigger:hover {
+  transform: scale(1.05);
+}
+
+.color-swatch-trigger--open {
+  animation: ui-select-pop 0.28s var(--sk-ease-spring) both;
+}
+
+.color-picker-popover,
+.ai-assist-popover,
+.ai-botbox-popover,
+.mantine-Menu-dropdown,
+.mantine-Select-dropdown,
+.mantine-Popover-dropdown {
+  animation: ui-popover-in 0.22s var(--sk-ease-out) both !important;
+}
+
+@keyframes ui-popover-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ── Toasts ── */
+
+.app-toast {
+  animation: ui-toast-in 0.34s var(--sk-ease-out) both;
+}
+
+@keyframes ui-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* ── Status banner accent ── */
+
+.status-banner__accent {
+  animation: ui-banner-accent 2.8s ease-in-out infinite;
+}
+
+@keyframes ui-banner-accent {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.status-banner__icon {
+  transition: transform var(--sk-duration-normal) var(--sk-ease-spring);
+}
+
+.status-banner:hover .status-banner__icon {
+  transform: scale(1.08) rotate(-6deg);
+}
+
+/* ── Titlebar ── */
+
+.titlebar__pill,
+.titlebar__status-dot {
+  transition:
+    background var(--sk-duration-fast) ease,
+    color var(--sk-duration-fast) ease,
+    transform var(--sk-duration-fast) var(--sk-ease-out),
+    box-shadow var(--sk-duration-fast) ease;
+}
+
+.titlebar__pill:hover {
+  transform: translateY(-1px);
+}
+
+.titlebar__win-btn {
+  transition:
+    background var(--sk-duration-fast) ease,
+    color var(--sk-duration-fast) ease;
+}
+
+/* ── Sliders & switches ── */
+
+.mantine-Switch-thumb {
+  transition: transform var(--sk-duration-normal) var(--sk-ease-spring) !important;
+}
+
+/* ── Section labels & empty states ── */
+
+.section-label__icon {
+  transition: transform var(--sk-duration-normal) var(--sk-ease-spring);
+}
+
+.app-section-label:hover .section-label__icon {
+  transform: scale(1.08) rotate(-5deg);
+}
+
+.soft-empty,
+.history-empty,
+.animation-effect-picker__empty {
+  animation: ui-fade-in 0.36s var(--sk-ease-out) both;
+}
+
+@keyframes ui-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Calibration tour dots ── */
+
+.calib-tour__dot {
+  transition:
+    transform var(--sk-duration-normal) var(--sk-ease-spring),
+    background var(--sk-duration-fast) ease,
+    width var(--sk-duration-normal) var(--sk-ease-out);
+}
+
+.calib-tour__dot--active {
+  animation: ui-select-pop 0.28s var(--sk-ease-spring) both;
+}
+
+.calib-tour__nav-btn,
+.calib-tour__auto {
+  transition:
+    background var(--sk-duration-fast) ease,
+    border-color var(--sk-duration-fast) ease,
+    transform var(--sk-duration-fast) var(--sk-ease-out);
+}
+
+.calib-tour__nav-btn:active,
+.calib-tour__auto:active {
+  transform: scale(0.96);
+}
+
+/* ── Footer badge ── */
+
+.app-footer-hints .mantine-Badge-root {
+  transition: transform var(--sk-duration-fast) var(--sk-ease-out);
+}
+
+.app-footer-hints .mantine-Badge-root:hover {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 900px) {
+  .nav-rail__indicator {
+    left: var(--sk-space-sm);
+    top: 50%;
+    transform: translateY(-50%) translateX(calc(var(--nav-active-index, 0) * (var(--sk-nav-btn-size) + var(--sk-nav-btn-gap))));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .list-row:hover,
+  .soft-info-card:hover,
+  .device-card:hover,
+  .animation-effect-chip:hover,
+  .port-row:hover,
+  .preset-chip:hover,
+  .screen-sync-region__option:hover,
+  .device-card__stat:hover,
+  .preview-meta-card:hover,
+  .gradient-stop-chip:hover,
+  .middle-panel__action-btn:hover:not(:disabled),
+  .titlebar__pill:hover,
+  .app-footer-hints .mantine-Badge-root:hover {
+    transform: none;
+  }
+
+  .app-slider:not(.app-slider--dragging):hover [class*="Slider-thumb"],
+  .app-slider:not(.app-slider--dragging) [class*="Slider-thumb"]:hover {
+    transform: translate(-50%, -50%) !important;
+    box-shadow: 0 2px 8px rgba(15, 35, 30, 0.18) !important;
+  }
+}

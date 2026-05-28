@@ -56,9 +56,20 @@ function findLargestGapInsertAt(stops) {
   return insertAt;
 }
 
+function getTrackHandleInsetPx(track) {
+  if (!track) return 11;
+  const handleSize = Number.parseFloat(
+    getComputedStyle(track).getPropertyValue("--animation-palette-handle-size")
+  );
+  return Number.isFinite(handleSize) && handleSize > 0 ? handleSize / 2 : 11;
+}
+
 function positionFromPointer(track, clientX, stopId, stops) {
   const rect = track.getBoundingClientRect();
-  const raw = (clientX - rect.left) / rect.width;
+  const inset = getTrackHandleInsetPx(track);
+  const travelWidth = Math.max(rect.width - inset * 2, 1);
+  const raw = (clientX - rect.left - inset) / travelWidth;
+
   if (!stopId) {
     return Math.max(ANIMATION_STOP_MIN_GAP, Math.min(1 - ANIMATION_STOP_MIN_GAP, raw));
   }
@@ -318,7 +329,7 @@ export function AnimationColorControls({ settings, onChange }) {
                 key={stop.id}
                 type="button"
                 className={`animation-palette-editor__handle ${isActive ? "animation-palette-editor__handle--active" : ""} ${isDragging ? "animation-palette-editor__handle--dragging" : ""} ${isEdge ? "animation-palette-editor__handle--edge" : ""} ${newStopIds.includes(stop.id) ? "animation-palette-editor__handle--new" : ""}`}
-                style={{ left: `${stop.position * 100}%` }}
+                style={{ "--stop-position": stop.position }}
                 onPointerDown={(event) => beginStopDrag(event, stop.id)}
                 aria-label={`Palette color at ${formatStopPosition(stop.position)}`}
                 aria-pressed={isActive}

@@ -4,6 +4,7 @@ import {
   Button,
   Group,
   PasswordInput,
+  SegmentedControl,
   Stack,
   Switch,
   Text,
@@ -12,6 +13,7 @@ import {
 import {
   IconBulb,
   IconCpu,
+  IconPalette,
   IconRocket,
   IconKey,
   IconPlugConnected,
@@ -143,7 +145,7 @@ export function DevicePanel({
               </Text>
             </div>
             {portLabel ? (
-              <Badge variant="light" color="gray" size="sm" radius="xl" className="device-card__badge">
+              <Badge variant="light" color="gray" size="sm" radius="sm" className="device-card__badge">
                 Pending
               </Badge>
             ) : null}
@@ -175,10 +177,10 @@ export function DevicePanel({
               </Text>
             ) : null}
             <Group gap={6} wrap="nowrap" className="device-card__badges">
-              <Badge variant="dot" color={ledOn ? "teal" : "gray"} size="sm" radius="xl">
+              <Badge variant="dot" color={ledOn ? "teal" : "gray"} size="sm" radius="sm">
                 {ledOn ? "Online" : "Off"}
               </Badge>
-              <Badge variant="light" color="teal" size="sm" radius="xl">
+              <Badge variant="light" color="teal" size="sm" radius="sm">
                 Live
               </Badge>
             </Group>
@@ -367,24 +369,35 @@ export function DevicePanelActions({
   connecting,
 }) {
   return (
-    <Group grow preventGrowOverflow={false} className="middle-panel__actions" gap="xs">
+    <Group grow preventGrowOverflow={false} className="middle-panel__actions" gap={8}>
       <Button
+        classNames={{ root: "middle-panel__action-btn middle-panel__action-btn--scan" }}
         variant="default"
-        radius="md"
-        size="compact-sm"
-        leftSection={<IconRefresh size={15} />}
+        radius="sm"
+        size="sm"
+        leftSection={<IconRefresh size={16} stroke={1.75} />}
         onClick={onScan}
         loading={scanning}
       >
         Scan
       </Button>
       <Button
-        className="btn-soft-primary"
-        radius="md"
-        size="compact-sm"
+        classNames={{
+          root: `middle-panel__action-btn middle-panel__action-btn--connect${
+            connected ? " middle-panel__action-btn--disconnect" : ""
+          }`,
+        }}
         variant={connected ? "default" : "filled"}
-        color={connected ? "gray" : "dark"}
-        leftSection={connected ? <IconPlugConnectedX size={15} /> : <IconPlugConnected size={15} />}
+        color={connected ? undefined : "teal"}
+        radius="sm"
+        size="sm"
+        leftSection={
+          connected ? (
+            <IconPlugConnectedX size={16} stroke={1.75} />
+          ) : (
+            <IconPlugConnected size={16} stroke={1.75} />
+          )
+        }
         onClick={onToggleConnection}
         loading={connecting}
       >
@@ -434,6 +447,25 @@ export function SettingsPanel({
               platform.openai.com/api-keys
             </a>
             . Requests go directly from this app to OpenAI.
+          </Text>
+        </Stack>
+      </Box>
+
+      <Box>
+        <SectionLabel icon={IconPalette}>Appearance</SectionLabel>
+        <Stack gap="sm">
+          <SegmentedControl
+            fullWidth
+            value={settings.colorScheme ?? "system"}
+            onChange={(value) => onChange({ colorScheme: value })}
+            data={[
+              { label: "System", value: "system" },
+              { label: "Light", value: "light" },
+              { label: "Dark", value: "dark" },
+            ]}
+          />
+          <Text size="xs" c="dimmed" lh={1.5}>
+            Defaults to your Windows or macOS theme. Choose Light or Dark to override.
           </Text>
         </Stack>
       </Box>

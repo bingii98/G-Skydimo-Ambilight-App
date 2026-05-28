@@ -23,6 +23,12 @@ contextBridge.exposeInMainWorld("skydimo", {
   toggleMaximizeWindow: () => ipcRenderer.invoke("window:toggleMaximize"),
   closeWindow: () => ipcRenderer.invoke("window:close"),
   toggleDevTools: () => ipcRenderer.invoke("window:toggleDevTools"),
+  getShouldUseDarkColors: () => ipcRenderer.invoke("theme:getShouldUseDarkColors"),
+  onThemeChange: (callback) => {
+    const listener = (_event, payload) => callback(payload);
+    ipcRenderer.on("theme:updated", listener);
+    return () => ipcRenderer.removeListener("theme:updated", listener);
+  },
   onWindowChromeChange: (callback) => {
     const listener = (_event, payload) => callback(payload);
     ipcRenderer.on("window:chromeChanged", listener);

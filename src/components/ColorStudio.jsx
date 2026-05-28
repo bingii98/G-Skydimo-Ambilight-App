@@ -26,6 +26,7 @@ import { ColorModePanel } from "./ColorModePanel";
 import { GradientControls } from "./GradientControls";
 import {
   applyHexToSettings,
+  buildLedClearSelectionPatch,
   buildLedSelectionPatch,
   buildLedsSelectionPatch,
   COLOR_MODES,
@@ -50,6 +51,7 @@ export function PreviewHero({
   deviceModel,
   onSelectLed,
   onSelectLeds,
+  onClearSelection,
   screenLedColors,
 }) {
   const previewHex = connected && !ledOn ? "#000000" : hex;
@@ -102,6 +104,7 @@ export function PreviewHero({
               deviceModel={deviceModel}
               onSelectLed={onSelectLed}
               onSelectLeds={onSelectLeds}
+              onClearSelection={onClearSelection}
               connected={connected}
               livePreview={livePreview}
               ledOn={ledOn}
@@ -161,7 +164,7 @@ export function PreviewHero({
                   leftSection={<IconPlugConnected size={14} />}
                   onClick={onQuickConnect}
                   className="btn-soft-primary"
-                  radius="xl"
+                  radius="sm"
                   size="compact-sm"
                 >
                   Connect
@@ -253,7 +256,7 @@ export function PreviewHero({
                 leftSection={<IconPlugConnected size={16} />}
                 onClick={onQuickConnect}
                 className="btn-soft-primary"
-                radius="xl"
+                radius="sm"
                 size="md"
               >
                 Connect now
@@ -386,11 +389,12 @@ export function ColorControls({
                 onChange(patch);
               }
             }}
+            onClearSelection={() => onChange(buildLedClearSelectionPatch())}
             screenLedColors={screenLedColors}
           />
         </aside>
 
-        <div className="color-studio__scroll">
+        <div className="color-studio__scroll ui-stagger-children">
           <ColorModePanel
             settings={settings}
             ledCount={ledCount}

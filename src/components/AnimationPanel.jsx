@@ -7,6 +7,8 @@ import {
   IconBolt,
   IconCloud,
   IconCloudBolt,
+  IconConfetti,
+  IconDroplet,
   IconFlame,
   IconHeartbeat,
   IconMeteor,
@@ -16,6 +18,7 @@ import {
   IconScan,
   IconSearch,
   IconShield,
+  IconSparkles,
   IconStars,
   IconSunset2,
   IconTransitionRight,
@@ -46,9 +49,9 @@ import {
   isValidAnimationId,
 } from "../lib/animations";
 import { AnimationColorControls, AnimationSingleColorControl } from "./AnimationColorControls";
+import { AnimationTuningSliders } from "./AnimationTuningSliders";
 import { AiColorAssistant } from "./AiColorAssistant";
 import { SectionLabel } from "./ui/AppPanel";
-import { AppSlider, appSliderTuningClassNames } from "./ui/AppSlider";
 
 const ANIMATION_ICONS = {
   [ANIMATION_IDS.RAINBOW]: IconPalette,
@@ -67,6 +70,9 @@ const ANIMATION_ICONS = {
   [ANIMATION_IDS.LIGHTNING]: IconCloudBolt,
   [ANIMATION_IDS.SPECTRUM]: IconTransitionRight,
   [ANIMATION_IDS.FADE]: IconSunset2,
+  [ANIMATION_IDS.GLITTER]: IconSparkles,
+  [ANIMATION_IDS.CASCADE]: IconDroplet,
+  [ANIMATION_IDS.DISCO]: IconConfetti,
 };
 
 export function AnimationPanel({ settings, onChange }) {
@@ -78,8 +84,6 @@ export function AnimationPanel({ settings, onChange }) {
   const colorControls = getAnimationColorControls(activeConfig);
   const speed = settings.animationSpeed ?? 50;
   const intensity = settings.animationIntensity ?? 50;
-  const [speedUi, setSpeedUi] = useState(speed);
-  const [intensityUi, setIntensityUi] = useState(intensity);
   const reverse = Boolean(settings.animationReverse);
   const hasApiKey = Boolean(settings.openaiApiKey?.trim());
 
@@ -220,7 +224,7 @@ export function AnimationPanel({ settings, onChange }) {
                     aria-label={`${label}. ${hint}`}
                   >
                     <span className="animation-effect-chip__icon" aria-hidden>
-                      <Icon size={15} stroke={1.75} />
+                      <Icon size={18} stroke={1.75} />
                     </span>
                     <span className="animation-effect-chip__label">{label}</span>
                   </button>
@@ -274,50 +278,16 @@ export function AnimationPanel({ settings, onChange }) {
             Customize
           </SectionLabel>
 
-          <div className="gradient-controls__panel paint-mode-panel paint-mode-panel--animation">
-            {colorControls.showPalette ? (
-              <AnimationColorControls settings={settings} onChange={onChange} />
-            ) : null}
+          {colorControls.showPalette ? (
+            <AnimationColorControls settings={settings} onChange={onChange} />
+          ) : null}
 
-            {colorControls.showSingleColor ? (
-              <AnimationSingleColorControl settings={settings} onChange={onChange} label="Color" />
-            ) : null}
-          </div>
+          {colorControls.showSingleColor ? (
+            <AnimationSingleColorControl settings={settings} onChange={onChange} label="Color" />
+          ) : null}
 
           <div className="animation-tuning-grid">
-            <div className="animation-tuning-grid__sliders">
-              <div className="animation-tuning">
-                <div className="animation-tuning__header">
-                  <span className="animation-tuning__label">Speed</span>
-                  <span className="animation-tuning__value">{speedUi}%</span>
-                </div>
-                <AppSlider
-                  value={speed}
-                  onLiveChange={setSpeedUi}
-                  onChange={(value) => onChange({ animationSpeed: value })}
-                  min={1}
-                  max={100}
-                  size="md"
-                  classNames={appSliderTuningClassNames}
-                />
-              </div>
-
-              <div className="animation-tuning">
-                <div className="animation-tuning__header">
-                  <span className="animation-tuning__label">Intensity</span>
-                  <span className="animation-tuning__value">{intensityUi}%</span>
-                </div>
-                <AppSlider
-                  value={intensity}
-                  onLiveChange={setIntensityUi}
-                  onChange={(value) => onChange({ animationIntensity: value })}
-                  min={1}
-                  max={100}
-                  size="md"
-                  classNames={appSliderTuningClassNames}
-                />
-              </div>
-            </div>
+            <AnimationTuningSliders speed={speed} intensity={intensity} onChange={onChange} />
 
             <div className="animation-tuning-grid__direction">
               <span className="animation-tuning__label">Direction</span>

@@ -7,6 +7,7 @@ import {
   resolveStripLayout,
 } from "./zoneLayout";
 import { ensureHex, normalizeHex, scaledRgb } from "./colorUtils";
+import { attachModeColorsSnapshot } from "./modeColors";
 import {
   buildGradientCss,
   buildGradientTrackBackground,
@@ -40,13 +41,9 @@ export {
   updateGradientStopColor,
   updateGradientStopPosition,
 } from "./gradientStops";
+import { COLOR_MODES } from "./colorModes";
 
-export const COLOR_MODES = {
-  SINGLE: "single",
-  LEDS: "leds",
-  ANIMATION: "animation",
-  SCREEN: "screen",
-};
+export { COLOR_MODES } from "./colorModes";
 
 export function isPerLedPreview(colorMode) {
   return colorMode === COLOR_MODES.LEDS;
@@ -120,18 +117,14 @@ export function getProfileZones(deviceModel, ledCount) {
 }
 
 function getBaseZones(deviceModel, ledCount, settings = null) {
-  const profileZones = getProfileZones(deviceModel, ledCount);
-  if (profileZones) {
-    return profileZones;
-  }
-
-  if (isValidStripCounts(settings?.stripCounts, ledCount)) {
-    return buildZonesFromStripLayout(resolveStripLayout(settings, deviceModel, ledCount));
-  }
-
   const layout = resolveStripLayout(settings, deviceModel, ledCount);
   if (layout) {
     return buildZonesFromStripLayout(layout);
+  }
+
+  const profileZones = getProfileZones(deviceModel, ledCount);
+  if (profileZones) {
+    return profileZones;
   }
 
   if (deviceModel === "SK0L27" && ledCount === 96) {
@@ -271,6 +264,10 @@ export function getZoneRepresentativeColor(ledColors, zone, fallbackHex) {
 }
 
 export function getSelectedLeds(settings, ledCount) {
+  if (settings.selectedLed == null) {
+    return [];
+  }
+
   if (Array.isArray(settings.selectedLeds) && settings.selectedLeds.length > 0) {
     return [...new Set(settings.selectedLeds)]
       .filter((index) => index >= 0 && index < ledCount)
@@ -283,6 +280,9 @@ export function getSelectedLeds(settings, ledCount) {
 
 export function getSelectionLabel(settings, ledCount) {
   const selected = getSelectedLeds(settings, ledCount);
+  if (selected.length === 0) {
+    return "No LEDs selected";
+  }
   if (selected.length > 1) {
     return `${selected.length} LEDs selected`;
   }
@@ -299,6 +299,13 @@ export function buildLedSelectionPatch(settings, ledCount, index) {
     selectedLed: index,
     selectedLeds: [index],
     hex: ledColors[index] || settings.hex,
+  };
+}
+
+export function buildLedClearSelectionPatch() {
+  return {
+    selectedLed: null,
+    selectedLeds: null,
   };
 }
 
@@ -536,7 +543,7 @@ export function applyHexToSettings(settings, hex, ledCount, deviceModel) {
   if (!normalized) return null;
 
   if (settings.colorMode === COLOR_MODES.SINGLE) {
-    return { hex: normalized };
+    return attachModeColorsSnapshot(settings, { hex: normalized });
   }
 
   const selected = getSelectedLeds(settings, ledCount);
@@ -547,7 +554,7 @@ export function applyHexToSettings(settings, hex, ledCount, deviceModel) {
     const activeId = settings.gradientActiveStopId || gradientStops[0]?.id;
     const nextStops = updateGradientStopColor(gradientStops, activeId, normalized);
 
-    return {
+    return attachModeColorsSnapshot(settings, {
       hex: normalized,
       gradientStops: nextStops,
       gradientActiveStopId: activeId,
@@ -560,7 +567,7 @@ export function applyHexToSettings(settings, hex, ledCount, deviceModel) {
         settings.zoneRotation ?? 0,
         settings
       ),
-    };
+    });
   }
 
   const next = [...ledColors];
@@ -568,5 +575,5 @@ export function applyHexToSettings(settings, hex, ledCount, deviceModel) {
     next[index] = normalized;
   }
 
-  return { hex: normalized, ledColors: next };
+  return attachModeColorsSnapshot(settings, { hex: normalized, ledColors: next });
 }

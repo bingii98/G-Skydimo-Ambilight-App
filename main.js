@@ -70,7 +70,18 @@ function updateTrayIcon() {
 function attachTrayThemeListener() {
   nativeTheme.on("updated", () => {
     updateTrayIcon();
+    broadcastThemeChange();
   });
+}
+
+function getThemePayload() {
+  return { shouldUseDarkColors: nativeTheme.shouldUseDarkColors };
+}
+
+function broadcastThemeChange() {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send("theme:updated", getThemePayload());
+  }
 }
 
 let mainWindow = null;
@@ -554,6 +565,8 @@ ipcMain.handle("app:getStartupStatus", async () => {
     mismatch: registered !== desired,
   };
 });
+
+ipcMain.handle("theme:getShouldUseDarkColors", async () => nativeTheme.shouldUseDarkColors);
 
 ipcMain.handle("window:getChrome", async () => getWindowChromePayload());
 

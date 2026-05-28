@@ -38,6 +38,7 @@ export function PreviewLedPicker({
   deviceModel,
   onSelectLed,
   onSelectLeds,
+  onClearSelection,
   connected,
   livePreview,
   ledOn = true,
@@ -64,9 +65,10 @@ export function PreviewLedPicker({
       ? ledColorsOverride
       : ensureLedColors(settings, ledCount);
   const selectedLeds = getSelectedLeds(settings, ledCount);
+  const hasSelection = selectedLeds.length > 0;
   const isMultiSelection = selectedLeds.length > 1;
-  const primaryIndex = selectedLeds[0] ?? 0;
-  const primaryHex = ledColors[primaryIndex] || settings.hex;
+  const primaryIndex = hasSelection ? selectedLeds[0] : null;
+  const primaryHex = hasSelection ? ledColors[primaryIndex] || settings.hex : settings.hex;
   const selectionRange =
     isMultiSelection && selectedLeds.length > 1
       ? `${selectedLeds[0] + 1}–${selectedLeds[selectedLeds.length - 1] + 1}`
@@ -75,6 +77,7 @@ export function PreviewLedPicker({
   const dragStartRef = useRef(null);
   const didDragRef = useRef(false);
   const [marquee, setMarquee] = useState(null);
+  const [hoverIndex, setHoverIndex] = useState(null);
 
   const getMonitorElement = () =>
     mapWrapRef.current?.querySelector(".preview-led-picker__monitor");
@@ -219,15 +222,18 @@ export function PreviewLedPicker({
         const index = hitTestLed(clientX, clientY);
         if (index !== null) {
           onSelectLed?.(index);
+        } else if (hasSelection) {
+          onClearSelection?.();
         }
       }
 
       dragStartRef.current = null;
       didDragRef.current = false;
       setMarquee(null);
+      setHoverIndex(null);
       wrap?.classList.remove("preview-led-picker__map-wrap--dragging");
     },
-    [hitTestLed, indicesInMarquee, marquee, onSelectLed, onSelectLeds]
+    [hasSelection, hitTestLed, indicesInMarquee, marquee, onClearSelection, onSelectLed, onSelectLeds]
   );
 
   const handlePointerDown = (event) => {
@@ -254,6 +260,7 @@ export function PreviewLedPicker({
 
   const handlePointerMove = (event) => {
     if (!dragStartRef.current) {
+      setHoverIndex(hitTestLed(event.clientX, event.clientY));
       return;
     }
 
@@ -293,6 +300,7 @@ export function PreviewLedPicker({
   };
 
   const selectAdjacentLed = (delta) => {
+    if (!hasSelection || primaryIndex == null) return;
     const nextIndex = Math.max(0, Math.min(ledCount - 1, primaryIndex + delta));
     if (nextIndex !== primaryIndex) {
       onSelectLed?.(nextIndex);
@@ -300,6 +308,7 @@ export function PreviewLedPicker({
   };
 
   const clearMultiSelection = () => {
+    if (primaryIndex == null) return;
     onSelectLed?.(primaryIndex);
   };
 
@@ -310,10 +319,31 @@ export function PreviewLedPicker({
     return indicesInMarquee(marquee).length;
   }, [indicesInMarquee, marquee]);
 
+  const marqueePreviewIndices = useMemo(() => {
+    if (!marquee || marquee.w < DRAG_THRESHOLD || marquee.h < DRAG_THRESHOLD) {
+      return null;
+    }
+    return new Set(indicesInMarquee(marquee));
+  }, [indicesInMarquee, marquee]);
+
   return (
     <div className={`preview-led-picker ${readOnly ? "preview-led-picker--readonly" : ""}`}>
       {!readOnly && (
       <div className="preview-led-picker__selection" aria-live="polite">
+        {!hasSelection ? (
+          <>
+            <div
+              className="preview-led-picker__swatch preview-led-picker__swatch--empty"
+              aria-hidden
+            />
+            <div className="preview-led-picker__selection-text">
+              <span className="preview-led-picker__meta preview-led-picker__meta--empty">
+                Click a LED or drag to select
+              </span>
+            </div>
+          </>
+        ) : (
+          <>
         {!isMultiSelection && (
           <button
             type="button"
@@ -370,16 +400,19 @@ export function PreviewLedPicker({
             <IconChevronRight size={14} stroke={2} />
           </button>
         )}
+          </>
+        )}
       </div>
       )}
 
       <div
         ref={mapWrapRef}
-        className={`preview-led-picker__map-wrap ${!readOnly && selectedLeds.length > 0 ? "preview-led-picker__map-wrap--has-selection" : ""}`}
+        className={`preview-led-picker__map-wrap ${!readOnly && hasSelection ? "preview-led-picker__map-wrap--has-selection" : ""}`}
         onPointerDown={readOnly ? undefined : handlePointerDown}
         onPointerMove={readOnly ? undefined : handlePointerMove}
         onPointerUp={readOnly ? undefined : handlePointerUp}
         onPointerCancel={readOnly ? undefined : handlePointerCancel}
+        onPointerLeave={readOnly ? undefined : () => setHoverIndex(null)}
       >
         {marquee && (
           <div
@@ -416,8 +449,10 @@ export function PreviewLedPicker({
                 const zoneId = indexZoneMap.get(index);
                 const zoneColor = zoneId ? getZoneColor(zoneId) : null;
                 const selected = isLedActive(index, settings, ledCount);
-                const isPrimary = index === primaryIndex;
+                const isPrimary = hasSelection && index === primaryIndex;
                 const light = isLightHex(hex);
+                const hovered = hoverIndex === index;
+                const marqueePreview = marqueePreviewIndices?.has(index);
                 return (
                   <span
                     key={index}
@@ -425,6 +460,8 @@ export function PreviewLedPicker({
                       "preview-led-picker__dot",
                       zoneId ? "preview-led-picker__dot--zoned" : "",
                       light ? "preview-led-picker__dot--light" : "",
+                      hovered ? "preview-led-picker__dot--hover" : "",
+                      marqueePreview ? "preview-led-picker__dot--marquee" : "",
                       selected ? "preview-led-picker__dot--selected" : "",
                       isPrimary ? "preview-led-picker__dot--primary" : "",
                       index === 0 ? "preview-led-picker__dot--origin" : "",
@@ -454,14 +491,18 @@ export function PreviewLedPicker({
           <div className="preview-led-picker__strip" role="list" aria-label="LED strip">
             {ledColors.map((hex, index) => {
               const selected = isLedActive(index, settings, ledCount);
-              const isPrimary = index === primaryIndex;
+              const isPrimary = hasSelection && index === primaryIndex;
               const light = isLightHex(hex);
+              const hovered = hoverIndex === index;
+              const marqueePreview = marqueePreviewIndices?.has(index);
               return (
                 <span
                   key={index}
                   className={[
                     "preview-led-picker__cell",
                     light ? "preview-led-picker__cell--light" : "",
+                    hovered ? "preview-led-picker__cell--hover" : "",
+                    marqueePreview ? "preview-led-picker__cell--marquee" : "",
                     selected ? "preview-led-picker__cell--selected" : "",
                     isPrimary ? "preview-led-picker__cell--primary" : "",
                   ]

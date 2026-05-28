@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Text } from "@mantine/core";
 import { IconDeviceDesktop, IconPlayerStop } from "@tabler/icons-react";
+import { COLOR_MODES } from "../lib/colorModes";
 import { resolveScreenSyncSmoothing } from "../lib/screenSync";
+import { buildModeSwitchPatch } from "../lib/modeColors";
 import { SectionLabel } from "./ui/AppPanel";
 import { AppSelect } from "./ui/AppSelect";
 import { AppSlider, appSliderTuningClassNames } from "./ui/AppSlider";
@@ -37,7 +39,7 @@ export function ScreenSyncPanel({
   ];
 
   const stopScreenSync = () => {
-    onChange({ colorMode: "single" });
+    onChange(buildModeSwitchPatch(settings, COLOR_MODES.SINGLE));
   };
 
   return (

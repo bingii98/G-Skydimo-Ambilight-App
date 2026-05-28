@@ -10,6 +10,7 @@ import {
   IconInfoCircle,
 } from "@tabler/icons-react";
 import { ColorControls } from "./components/ColorStudio";
+import { useAppTheme } from "./components/AppThemeProvider";
 import { MiddlePanel } from "./components/MiddlePanel";
 import { DiscordTitleBar } from "./components/DiscordTitleBar";
 import { StatusBanner } from "./components/StatusBanner";
@@ -37,6 +38,10 @@ import {
   buildAnimationPixels,
   isAnimationPlaybackActive,
 } from "./lib/animations";
+import {
+  applyAnimationTuningLive,
+  resolveAnimationSettings,
+} from "./lib/animationTuningLive";
 import {
   areScreenSyncHexesEqual,
   areScreenSyncPixelsEqual,
@@ -79,6 +84,11 @@ function sleep(ms) {
 export default function App() {
   const { state, scan, connect, connectBest, disconnect, setOptions, setPixels } = useSkydimo();
   const { settings, history, saveSettings, addHistory, clearHistory, startupError } = useSettings();
+  const { setColorSchemePreference } = useAppTheme();
+
+  useEffect(() => {
+    setColorSchemePreference(settings.colorScheme ?? "system");
+  }, [settings.colorScheme, setColorSchemePreference]);
 
   const [selectedPort, setSelectedPort] = useState(null);
   const [activeNav, setActiveNav] = useState("devices");
@@ -105,6 +115,7 @@ export default function App() {
   const screenPreviewHexesRef = useRef(null);
   const screenSendingRef = useRef(false);
   const screenSyncSmoothingRef = useRef(resolveScreenSyncSmoothing(settings));
+  const settingsRef = useRef(settings);
 
   const [screenLedColors, setScreenLedColors] = useState([]);
 
@@ -123,6 +134,11 @@ export default function App() {
     enabled: screenMode,
     sourceId: settings.screenSyncSourceId,
   });
+
+  useEffect(() => {
+    settingsRef.current = settings;
+    applyAnimationTuningLive(settings);
+  }, [settings]);
 
   useEffect(() => {
     if (!selectedPort && state?.recommendedPort?.path) {
@@ -401,9 +417,14 @@ export default function App() {
         setStatusText(error.message);
         toastWarning("Calibration failed", error.message);
         return false;
+      } finally {
+        playbackPausedRef.current = false;
+        if (!options.persist && !controller.signal.aborted) {
+          await restoreAfterFlash();
+        }
       }
     },
-    [connected, ledCount, deviceModel, settings, setPixels]
+    [connected, ledCount, deviceModel, settings, setPixels, restoreAfterFlash]
   );
 
   const runCalibrationChase = useCallback(
@@ -608,8 +629,8 @@ export default function App() {
         animationTimerRef.current = null;
       }
       if (
-        settings.colorMode !== COLOR_MODES.ANIMATION &&
-        settings.colorMode !== COLOR_MODES.SCREEN &&
+        settingsRef.current.colorMode !== COLOR_MODES.ANIMATION &&
+        settingsRef.current.colorMode !== COLOR_MODES.SCREEN &&
         connected &&
         ledOn
       ) {
@@ -627,10 +648,11 @@ export default function App() {
       }
 
       const elapsed = performance.now() - animationStartRef.current;
+      const currentSettings = settingsRef.current;
       const pixels = buildAnimationPixels({
-        animationId: settings.animationId,
+        animationId: currentSettings.animationId,
         ledCount,
-        settings,
+        settings: resolveAnimationSettings(currentSettings),
         timeMs: elapsed,
         deviceModel,
       });
@@ -638,7 +660,7 @@ export default function App() {
       animSendingRef.current = true;
       setPixels(Array.from(pixels), ledCount)
         .then(() => {
-          const label = ANIMATIONS.find((item) => item.id === settings.animationId)?.label;
+          const label = ANIMATIONS.find((item) => item.id === currentSettings.animationId)?.label;
           setStatusText(label ? `Animation — ${label}` : "Animation");
         })
         .catch((error) => {
@@ -662,19 +684,8 @@ export default function App() {
   }, [
     animationActive,
     settings.animationId,
-    settings.animationSpeed,
-    settings.animationIntensity,
-    settings.animationReverse,
-    settings.stripOrigin,
-    settings.stripDirection,
-    settings.stripCounts,
-    settings.hex,
-    settings.animationSecondaryHex,
-    settings.animationColorStops,
-    settings.animationColorsById,
-    settings.brightness,
-    settings.colorMode,
     ledCount,
+    deviceModel,
     connected,
     ledOn,
     setPixels,
@@ -977,7 +988,7 @@ export default function App() {
               />
             )}
 
-            <div className="soft-layout">
+            <div className="soft-layout ui-app-enter">
               <MiddlePanel
                 nav={activeNav}
                 onNavChange={setActiveNav}
@@ -1014,9 +1025,7 @@ export default function App() {
                 onPortFilterChange={setPortFilter}
               />
 
-              <section className="studio-stage">
-                <div className="studio-stage__body">{colorControls}</div>
-              </section>
+              {colorControls}
             </div>
           </div>
         </AppShell.Main>

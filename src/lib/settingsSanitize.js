@@ -9,6 +9,9 @@ import {
   normalizeStripOrigin,
   STRIP_SIDES,
 } from "./zoneLayout";
+import { normalizeColorSchemePreference } from "../theme/colorScheme";
+import { COLOR_MODES } from "./colorModes";
+import { inferModeColorsFromSettings, normalizeModeColors } from "./modeColors";
 
 const VALID_COLOR_MODES = new Set(["single", "leds", "animation", "screen"]);
 const VALID_PAINT_MODES = new Set(["solid", "gradient"]);
@@ -79,18 +82,23 @@ export function sanitizeSettings(settings, defaults = {}) {
       next.ledColors = null;
     }
 
-    if (Array.isArray(next.selectedLeds)) {
-      next.selectedLeds = [...new Set(next.selectedLeds)]
-        .map((index) => Number(index))
-        .filter((index) => Number.isInteger(index) && index >= 0);
-      if (next.selectedLeds.length === 0) {
+    if (next.selectedLed == null) {
+      next.selectedLed = null;
+      next.selectedLeds = null;
+    } else {
+      if (Array.isArray(next.selectedLeds)) {
+        next.selectedLeds = [...new Set(next.selectedLeds)]
+          .map((index) => Number(index))
+          .filter((index) => Number.isInteger(index) && index >= 0);
+        if (next.selectedLeds.length === 0) {
+          next.selectedLeds = null;
+        }
+      } else {
         next.selectedLeds = null;
       }
-    } else {
-      next.selectedLeds = null;
-    }
 
-    next.selectedLed = Math.max(0, Number(next.selectedLed) || 0);
+      next.selectedLed = Math.max(0, Number(next.selectedLed) || 0);
+    }
 
     if (!next.gradientStops && (next.gradientFrom || next.gradientTo)) {
       next.gradientStops = normalizeGradientStops(
@@ -125,8 +133,41 @@ export function sanitizeSettings(settings, defaults = {}) {
     delete next.gradientTo;
     delete next.gradientActiveStop;
 
+    next.modeColors = next.modeColors
+      ? normalizeModeColors(next.modeColors, fallbackHex)
+      : inferModeColorsFromSettings(next, fallbackHex);
+
+    if (next.colorMode === COLOR_MODES.SINGLE) {
+      if (next.modeColors.single?.hex) {
+        next.hex = ensureHex(next.modeColors.single.hex, fallbackHex);
+      }
+      next.modeColors = {
+        ...next.modeColors,
+        single: { hex: next.hex },
+      };
+    }
+
+    if (next.colorMode === COLOR_MODES.LEDS) {
+      next.modeColors = {
+        ...next.modeColors,
+        leds: {
+          hex: ensureHex(next.hex, fallbackHex),
+          ledPaintMode: next.ledPaintMode,
+          ledColors: next.ledColors,
+          gradientStops: next.gradientStops,
+          gradientActiveStopId: next.gradientActiveStopId,
+          selectedLed: next.selectedLed ?? 0,
+          selectedLeds: next.selectedLeds,
+        },
+      };
+    }
+
     next.livePreview = true;
     next.launchAtStartup = Boolean(next.launchAtStartup);
+    next.colorScheme = normalizeColorSchemePreference(
+      next.colorScheme,
+      defaults.colorScheme || "system"
+    );
     delete next.restoreOnLaunch;
     next.openaiApiKey =
       typeof next.openaiApiKey === "string" ? next.openaiApiKey.trim() : "";
@@ -202,6 +243,7 @@ export function sanitizeSettings(settings, defaults = {}) {
       ledPaintMode: "solid",
       gradientStops: null,
       gradientActiveStopId: null,
+      modeColors: null,
       selectedLeds: null,
       ledColors: null,
       openaiApiKey: "",
@@ -216,6 +258,7 @@ export function sanitizeSettings(settings, defaults = {}) {
       screenSyncSourceId: null,
       screenSyncRegion: "edge",
       screenSyncSmoothing: 18,
+      colorScheme: "system",
       stripCounts: null,
       stripOrigin: "bottom-left",
       stripDirection: "cw",

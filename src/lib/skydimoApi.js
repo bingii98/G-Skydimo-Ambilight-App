@@ -27,6 +27,12 @@ const skydimoStub = {
   toggleMaximizeWindow: () => Promise.resolve({ isMaximized: false, isFullScreen: false }),
   closeWindow: () => Promise.resolve(null),
   toggleDevTools: () => Promise.resolve(false),
+  getShouldUseDarkColors: () =>
+    Promise.resolve(
+      typeof window !== "undefined" &&
+        window.matchMedia?.("(prefers-color-scheme: dark)")?.matches
+    ),
+  onThemeChange: () => noopUnsubscribe(),
   onWindowChromeChange: () => noopUnsubscribe(),
   onStateChange: () => noopUnsubscribe(),
 };
