@@ -4,7 +4,8 @@
     "preload.js",
     "connectionManager.js",
     "skydimo.js",
-    "windowState.js"
+    "windowState.js",
+    "startupRegistration.js"
   ],
   "ext": "js",
   "ignore": ["node_modules", "src", "dist"],

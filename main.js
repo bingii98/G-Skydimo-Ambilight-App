@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, desktopCapturer, screen } = require("electron");
+const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, nativeTheme, desktopCapturer, screen } = require("electron");
 const { APP_NAME } = require("./appInfo");
 const path = require("path");
 const { execSync } = require("child_process");
@@ -12,6 +12,10 @@ const {
 const { fetchGradientSuggestion } = require("./services/openaiGradient");
 const { fetchAnimationSuggestion } = require("./services/openaiAnimation");
 const { loadAppBehavior, saveAppBehavior } = require("./appBehaviorState");
+const {
+  applyStartupProcessPriority,
+  applyWindowsStartupRegistration,
+} = require("./startupRegistration");
 
 const isDev = !app.isPackaged && process.env.NODE_ENV === "development";
 const START_IN_TRAY_ARG = "--start-in-tray";
@@ -27,9 +31,14 @@ function loadAppIcon() {
   return image.isEmpty() ? undefined : image;
 }
 
-function loadTrayIcon() {
-  const iconPath = getAssetPath("tray.png");
+function loadTrayIconForTheme(useDarkColors = nativeTheme.shouldUseDarkColors) {
+  const iconPath = getAssetPath(useDarkColors ? "tray-dark.png" : "tray-light.png");
   let image = nativeImage.createFromPath(iconPath);
+
+  if (image.isEmpty()) {
+    image = nativeImage.createFromPath(getAssetPath("tray.png"));
+  }
+
   if (image.isEmpty()) {
     return nativeImage.createEmpty();
   }
@@ -39,6 +48,20 @@ function loadTrayIcon() {
   }
 
   return image;
+}
+
+function updateTrayIcon() {
+  if (!tray) {
+    return;
+  }
+
+  tray.setImage(loadTrayIconForTheme());
+}
+
+function attachTrayThemeListener() {
+  nativeTheme.on("updated", () => {
+    updateTrayIcon();
+  });
 }
 
 let mainWindow = null;
@@ -64,6 +87,18 @@ function applyLoginItemSettings() {
 
   const startInTray = appBehavior.launchAtStartup && appBehavior.runInTray;
 
+  if (process.platform === "win32") {
+    // Task Scheduler gives us high launch priority and zero logon delay.
+    // Registry Run entries (Electron default) cannot set process priority.
+    app.setLoginItemSettings({ openAtLogin: false });
+    applyWindowsStartupRegistration({
+      enabled: appBehavior.launchAtStartup,
+      exePath: process.execPath,
+      startInTrayArg: startInTray ? START_IN_TRAY_ARG : null,
+    });
+    return;
+  }
+
   app.setLoginItemSettings({
     openAtLogin: appBehavior.launchAtStartup,
     openAsHidden: startInTray,
@@ -88,8 +123,6 @@ function shouldStartHiddenInTray() {
   const login = app.getLoginItemSettings();
   return login.wasOpenedAsLogin || login.wasOpenedAsHidden;
 }
-
-const TRAY_ICON = loadTrayIcon();
 
 function isSkydimoAppRunning() {
   if (process.platform !== "win32") {
@@ -171,7 +204,7 @@ function createTray() {
     return;
   }
 
-  tray = new Tray(TRAY_ICON);
+  tray = new Tray(loadTrayIconForTheme());
   tray.setToolTip(`${APP_NAME} — running in background`);
   tray.setContextMenu(
     Menu.buildFromTemplate([
@@ -485,6 +518,8 @@ app.whenReady().then(() => {
   app.setName(APP_NAME);
   Object.assign(appBehavior, loadAppBehavior());
   applyLoginItemSettings();
+  applyStartupProcessPriority();
+  attachTrayThemeListener();
 
   windowState = loadWindowState();
   getManager();

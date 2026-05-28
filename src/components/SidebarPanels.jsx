@@ -367,6 +367,7 @@ export function SettingsPanel({ settings, onChange }) {
             When <strong>Run in system tray when closing</strong> is off, closing the window quits the app.
             When it is on, the app hides to the tray and keeps running in the background so LEDs stay on.
             If both startup and tray are enabled, the app boots into the tray without opening a window.
+            On Windows, startup uses a high-priority scheduled task so the app launches as early as possible at logon.
             Use the tray icon to open the window again, or choose Quit to exit fully.
           </Text>
         </Stack>

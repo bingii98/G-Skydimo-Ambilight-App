@@ -5235,17 +5235,17 @@ section:has(.app-slider--dragging) .color-studio__brightness-value {
   height: 24px;
   display: grid;
   place-items: center;
-  border-radius: 8px;
+  border-radius: 6px;
   overflow: hidden;
   flex-shrink: 0;
-  box-shadow: 0 4px 14px rgba(20, 184, 166, 0.28);
+  background: transparent;
 }
 
 .titlebar__logo img {
   width: 100%;
   height: 100%;
   display: block;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .titlebar__titles {

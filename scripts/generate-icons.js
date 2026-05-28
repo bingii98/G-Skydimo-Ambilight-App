@@ -7,20 +7,159 @@ const ROOT = path.join(__dirname, "..");
 const ASSETS = path.join(ROOT, "assets");
 const BUILD = path.join(ROOT, "build");
 const LOGO_SOURCE = path.join(ASSETS, "logo-source.png");
+const TRAY_DARK_SOURCE = path.join(ASSETS, "tray-dark-source.png");
+const TRAY_LIGHT_SOURCE = path.join(ASSETS, "tray-light-source.png");
 
-async function renderLogoSquare(size, padding = 0) {
+const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
+const BRAND_BG = { r: 0, g: 0, b: 0, alpha: 1 };
+const EDGE_CROP_PX = 2;
+const BACKGROUND_KEY_THRESHOLD = 42;
+const SOURCE_CROP_X = 4;
+
+let processedLogoCache = null;
+
+function keyOutDarkBackground(data) {
+  for (let i = 0; i < data.length; i += 4) {
+    const red = data[i];
+    const green = data[i + 1];
+    const blue = data[i + 2];
+    if (red <= BACKGROUND_KEY_THRESHOLD && green <= BACKGROUND_KEY_THRESHOLD && blue <= BACKGROUND_KEY_THRESHOLD) {
+      data[i + 3] = 0;
+    }
+  }
+}
+
+async function buildProcessedLogo() {
+  if (processedLogoCache) {
+    return processedLogoCache;
+  }
+
+  const meta = await sharp(LOGO_SOURCE).metadata();
+  const crop = Math.min(EDGE_CROP_PX, Math.floor(((meta.width || 1) - 1) / 2), Math.floor(((meta.height || 1) - 1) / 2));
+  const width = Math.max(1, (meta.width || 1) - crop * 2);
+  const height = Math.max(1, (meta.height || 1) - crop * 2);
+
+  const { data, info } = await sharp(LOGO_SOURCE)
+    .extract({ left: crop, top: crop, width, height })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  keyOutDarkBackground(data);
+
+  processedLogoCache = await sharp(data, {
+    raw: {
+      width: info.width,
+      height: info.height,
+      channels: 4,
+    },
+  })
+    .trim({ threshold: 8 })
+    .png()
+    .toBuffer();
+
+  return processedLogoCache;
+}
+
+async function extractLogoSource(cropX = SOURCE_CROP_X, cropY = 0) {
+  const meta = await sharp(LOGO_SOURCE).metadata();
+  const left = Math.min(cropX, Math.floor(((meta.width || 1) - 1) / 2));
+  const top = Math.min(cropY, Math.floor(((meta.height || 1) - 1) / 2));
+  const width = Math.max(1, (meta.width || 1) - left * 2);
+  const height = Math.max(1, (meta.height || 1) - top * 2);
+
+  return sharp(LOGO_SOURCE).extract({ left, top, width, height });
+}
+
+async function renderBrandedLogo(size, cropX = SOURCE_CROP_X) {
+  const source = await extractLogoSource(cropX, 0);
+  return source
+    .resize(size, size, {
+      fit: "contain",
+      background: BRAND_BG,
+    })
+    .png()
+    .toBuffer();
+}
+
+async function renderTitlebarLogo(size) {
+  const meta = await sharp(LOGO_SOURCE).metadata();
+  const left = Math.min(SOURCE_CROP_X, Math.floor(((meta.width || 1) - 1) / 2));
+  const width = Math.max(1, (meta.width || 1) - left * 2);
+  const height = meta.height || 1;
+
+  const { data, info } = await sharp(LOGO_SOURCE)
+    .extract({ left, top: 0, width, height })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  keyOutDarkBackground(data);
+
+  return sharp(data, {
+    raw: {
+      width: info.width,
+      height: info.height,
+      channels: 4,
+    },
+  })
+    .trim({ threshold: 8 })
+    .resize(size, size, {
+      fit: "contain",
+      background: TRANSPARENT,
+    })
+    .png()
+    .toBuffer();
+}
+
+async function renderFavicon(size) {
+  const processed = await buildProcessedLogo();
+  const padding = 1;
   const inner = Math.max(1, size - padding * 2);
-  return sharp(LOGO_SOURCE)
-    .resize(inner, inner, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 1 } })
+
+  return sharp(processed)
+    .resize(inner, inner, {
+      fit: "contain",
+      background: TRANSPARENT,
+    })
     .extend({
       top: padding,
       bottom: padding,
       left: padding,
       right: padding,
-      background: { r: 0, g: 0, b: 0, alpha: 1 },
+      background: TRANSPARENT,
     })
     .png()
     .toBuffer();
+}
+
+async function renderTransparentLogo(size, padding = 0) {
+  const processed = await buildProcessedLogo();
+  const inner = Math.max(1, size - padding * 2);
+
+  return sharp(processed)
+    .resize(inner, inner, { fit: "contain", background: TRANSPARENT })
+    .extend({
+      top: padding,
+      bottom: padding,
+      left: padding,
+      right: padding,
+      background: TRANSPARENT,
+    })
+    .png()
+    .toBuffer();
+}
+
+async function renderTrayIcon(sourcePath, size = 32, fallbackPadding = 2) {
+  try {
+    await fs.access(sourcePath);
+    return sharp(sourcePath)
+      .resize(size, size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .png()
+      .toBuffer();
+  } catch {
+    return renderTransparentLogo(size, fallbackPadding);
+  }
 }
 
 async function pngBufferToBmp(pngBuffer, width, height) {
@@ -75,7 +214,7 @@ function installerLabelSvg(width, height, lines, accent = "#14B8A6") {
 async function renderInstallerSidebar(lines, accent) {
   const width = 164;
   const height = 314;
-  const logo = await renderLogoSquare(84, 4);
+  const logo = await renderBrandedLogo(84);
 
   const base = sharp({
     create: {
@@ -100,7 +239,7 @@ async function renderInstallerSidebar(lines, accent) {
 async function renderInstallerHeader() {
   const width = 150;
   const height = 57;
-  const logo = await renderLogoSquare(36, 2);
+  const logo = await renderBrandedLogo(36);
 
   const labeled = await sharp({
     create: {
@@ -136,17 +275,23 @@ async function main() {
 
   await fs.access(LOGO_SOURCE);
 
+  processedLogoCache = null;
+
   const iconSizes = [256, 128, 64, 48, 32, 16];
-  const iconPngBuffers = await Promise.all(iconSizes.map((size) => renderLogoSquare(size)));
-  const trayPng = await renderLogoSquare(32, 2);
-  const faviconPng = await renderLogoSquare(32, 2);
+  const iconPngBuffers = await Promise.all(iconSizes.map((size) => renderBrandedLogo(size)));
+  const titlebarLogo = await renderTitlebarLogo(64);
+  const trayDarkPng = await renderTrayIcon(TRAY_DARK_SOURCE, 32);
+  const trayLightPng = await renderTrayIcon(TRAY_LIGHT_SOURCE, 32);
+  const faviconPng = await renderFavicon(32);
 
   await fs.writeFile(path.join(ASSETS, "icon.png"), iconPngBuffers[0]);
-  await fs.writeFile(path.join(ASSETS, "tray.png"), trayPng);
+  await fs.writeFile(path.join(ASSETS, "tray-dark.png"), trayDarkPng);
+  await fs.writeFile(path.join(ASSETS, "tray-light.png"), trayLightPng);
+  await fs.writeFile(path.join(ASSETS, "tray.png"), trayLightPng);
   await fs.writeFile(path.join(ASSETS, "favicon.png"), faviconPng);
   await fs.writeFile(path.join(ASSETS, "icon.ico"), await toIco(iconPngBuffers));
   await fs.writeFile(path.join(ROOT, "public", "favicon.png"), faviconPng);
-  await fs.writeFile(path.join(uiAssets, "app-logo.png"), faviconPng);
+  await fs.writeFile(path.join(uiAssets, "app-logo.png"), titlebarLogo);
 
   await fs.writeFile(
     path.join(BUILD, "installer-sidebar.bmp"),
@@ -174,7 +319,7 @@ async function main() {
 
   await fs.writeFile(path.join(BUILD, "installer-header.bmp"), await renderInstallerHeader());
 
-  console.log("Generated all icons and installer graphics from assets/logo-source.png");
+  console.log("Generated app icons, tray dark/light icons, installer graphics, and UI favicon");
 }
 
 main().catch((error) => {
