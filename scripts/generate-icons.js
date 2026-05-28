@@ -11,184 +11,69 @@ const TRAY_DARK_SOURCE = path.join(ASSETS, "tray-dark-source.png");
 const TRAY_LIGHT_SOURCE = path.join(ASSETS, "tray-light-source.png");
 
 const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
-const BRAND_BG = { r: 0, g: 0, b: 0, alpha: 1 };
-const EDGE_CROP_PX = 2;
-const BACKGROUND_KEY_THRESHOLD = 42;
-const SOURCE_CROP_X = 4;
+const SETUP_BG = { r: 11, g: 14, b: 18, alpha: 1 };
+const SETUP_HEADER_BG = { r: 17, g: 22, b: 28, alpha: 1 };
+const SETUP_CARD = "#f8fafc";
+const SETUP_CARD_BORDER = "#d7dde5";
 
-let processedLogoCache = null;
-let trimmedLogoCache = null;
+let logoBufferCache = null;
 
-function keyOutDarkBackground(data) {
-  for (let i = 0; i < data.length; i += 4) {
-    const red = data[i];
-    const green = data[i + 1];
-    const blue = data[i + 2];
-    if (red <= BACKGROUND_KEY_THRESHOLD && green <= BACKGROUND_KEY_THRESHOLD && blue <= BACKGROUND_KEY_THRESHOLD) {
-      data[i + 3] = 0;
-    }
+async function loadLogoBuffer() {
+  if (!logoBufferCache) {
+    logoBufferCache = await sharp(LOGO_SOURCE).ensureAlpha().png().toBuffer();
   }
+  return logoBufferCache;
 }
 
-async function buildTrimmedLogoFromSource() {
-  if (trimmedLogoCache) {
-    return trimmedLogoCache;
-  }
-
-  const meta = await sharp(LOGO_SOURCE).metadata();
-  const left = Math.min(SOURCE_CROP_X, Math.floor(((meta.width || 1) - 1) / 2));
-  const width = Math.max(1, (meta.width || 1) - left * 2);
-  const height = meta.height || 1;
-
-  const { data, info } = await sharp(LOGO_SOURCE)
-    .extract({ left, top: 0, width, height })
-    .ensureAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-
-  keyOutDarkBackground(data);
-
-  trimmedLogoCache = await sharp(data, {
-    raw: {
-      width: info.width,
-      height: info.height,
-      channels: 4,
-    },
-  })
-    .trim({ threshold: 8 })
-    .png()
-    .toBuffer();
-
-  return trimmedLogoCache;
-}
-
-async function buildProcessedLogo() {
-  if (processedLogoCache) {
-    return processedLogoCache;
-  }
-
-  const meta = await sharp(LOGO_SOURCE).metadata();
-  const crop = Math.min(EDGE_CROP_PX, Math.floor(((meta.width || 1) - 1) / 2), Math.floor(((meta.height || 1) - 1) / 2));
-  const width = Math.max(1, (meta.width || 1) - crop * 2);
-  const height = Math.max(1, (meta.height || 1) - crop * 2);
-
-  const { data, info } = await sharp(LOGO_SOURCE)
-    .extract({ left: crop, top: crop, width, height })
-    .ensureAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-
-  keyOutDarkBackground(data);
-
-  processedLogoCache = await sharp(data, {
-    raw: {
-      width: info.width,
-      height: info.height,
-      channels: 4,
-    },
-  })
-    .trim({ threshold: 8 })
-    .png()
-    .toBuffer();
-
-  return processedLogoCache;
-}
-
-async function renderAppIcon(size, padding = 2) {
-  const trimmed = await buildTrimmedLogoFromSource();
+async function resizeLogo(size, padding = 0) {
+  const buf = await loadLogoBuffer();
   const inner = Math.max(1, size - padding * 2);
-  const logo = await sharp(trimmed)
-    .resize(inner, inner, {
-      fit: "contain",
+  const resized = await sharp(buf)
+    .resize(inner, inner, { fit: "contain", background: TRANSPARENT })
+    .png()
+    .toBuffer();
+
+  if (padding === 0) {
+    return resized;
+  }
+
+  return sharp(resized)
+    .extend({
+      top: padding,
+      bottom: padding,
+      left: padding,
+      right: padding,
       background: TRANSPARENT,
     })
     .png()
     .toBuffer();
+}
 
-  return sharp({
-    create: {
-      width: size,
-      height: size,
-      channels: 4,
-      background: BRAND_BG,
-    },
-  })
-    .composite([{ input: logo, gravity: "centre" }])
-    .png()
-    .toBuffer();
+async function renderAppIcon(size) {
+  return resizeLogo(size);
 }
 
 async function renderInstallerLogo(size) {
-  const trimmed = await buildTrimmedLogoFromSource();
-
-  return sharp(trimmed)
-    .resize(size, size, {
-      fit: "contain",
-      background: TRANSPARENT,
-    })
-    .png()
-    .toBuffer();
+  return resizeLogo(size);
 }
 
 async function renderTitlebarLogo(size) {
-  const trimmed = await buildTrimmedLogoFromSource();
-
-  return sharp(trimmed)
-    .resize(size, size, {
-      fit: "contain",
-      background: TRANSPARENT,
-    })
-    .png()
-    .toBuffer();
+  return resizeLogo(size);
 }
 
 async function renderFavicon(size) {
-  const processed = await buildProcessedLogo();
-  const padding = 1;
-  const inner = Math.max(1, size - padding * 2);
-
-  return sharp(processed)
-    .resize(inner, inner, {
-      fit: "contain",
-      background: TRANSPARENT,
-    })
-    .extend({
-      top: padding,
-      bottom: padding,
-      left: padding,
-      right: padding,
-      background: TRANSPARENT,
-    })
-    .png()
-    .toBuffer();
-}
-
-async function renderTransparentLogo(size, padding = 0) {
-  const processed = await buildProcessedLogo();
-  const inner = Math.max(1, size - padding * 2);
-
-  return sharp(processed)
-    .resize(inner, inner, { fit: "contain", background: TRANSPARENT })
-    .extend({
-      top: padding,
-      bottom: padding,
-      left: padding,
-      right: padding,
-      background: TRANSPARENT,
-    })
-    .png()
-    .toBuffer();
+  return resizeLogo(size, 1);
 }
 
 async function renderTrayIcon(sourcePath, size = 32, fallbackPadding = 2) {
   try {
     await fs.access(sourcePath);
     return sharp(sourcePath)
-      .resize(size, size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .resize(size, size, { fit: "contain", background: TRANSPARENT })
       .png()
       .toBuffer();
   } catch {
-    return renderTransparentLogo(size, fallbackPadding);
+    return resizeLogo(size, fallbackPadding);
   }
 }
 
@@ -228,11 +113,19 @@ async function pngBufferToBmp(pngBuffer, width, height) {
   return buffer;
 }
 
+function escapeXml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function installerLabelSvg(width, height, lines, accent = "#14B8A6") {
   const textLines = lines
     .map(
-      (line, index) =>
-        `<text x="${width / 2}" y="${line.y}" text-anchor="middle" fill="${line.color || "#eef3f8"}" font-family="Segoe UI, Arial, sans-serif" font-size="${line.size}" font-weight="${line.weight || 400}">${line.text}</text>`
+      (line) =>
+        `<text x="${width / 2}" y="${line.y}" text-anchor="middle" fill="${line.color || "#eef3f8"}" font-family="Segoe UI, Arial, sans-serif" font-size="${line.size}" font-weight="${line.weight || 400}">${escapeXml(line.text)}</text>`
     )
     .join("");
 
@@ -241,23 +134,39 @@ function installerLabelSvg(width, height, lines, accent = "#14B8A6") {
   );
 }
 
+async function renderSetupLogoCard(width, height, logoSize, radius = 18) {
+  const logo = await renderInstallerLogo(logoSize);
+  const card = await sharp(
+    Buffer.from(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect x="1" y="1" width="${width - 2}" height="${height - 2}" rx="${radius}" fill="${SETUP_CARD}" stroke="${SETUP_CARD_BORDER}" stroke-width="1"/></svg>`
+    )
+  )
+    .png()
+    .toBuffer();
+
+  return sharp(card)
+    .composite([{ input: logo, gravity: "centre" }])
+    .png()
+    .toBuffer();
+}
+
 async function renderInstallerSidebar(lines, accent) {
   const width = 164;
   const height = 314;
-  const logo = await renderInstallerLogo(84);
+  const logoCard = await renderSetupLogoCard(112, 112, 92, 22);
 
   const base = sharp({
     create: {
       width,
       height,
       channels: 4,
-      background: { r: 11, g: 14, b: 18, alpha: 1 },
+      background: SETUP_BG,
     },
   });
 
   const labeled = await base
     .composite([
-      { input: logo, top: 42, left: 40 },
+      { input: logoCard, top: 28, left: 26 },
       { input: installerLabelSvg(width, height, lines, accent), top: 0, left: 0 },
     ])
     .png()
@@ -269,21 +178,21 @@ async function renderInstallerSidebar(lines, accent) {
 async function renderInstallerHeader() {
   const width = 150;
   const height = 57;
-  const logo = await renderInstallerLogo(36);
+  const logoCard = await renderSetupLogoCard(42, 42, 34, 10);
 
   const labeled = await sharp({
     create: {
       width,
       height,
       channels: 4,
-      background: { r: 17, g: 22, b: 28, alpha: 1 },
+      background: SETUP_HEADER_BG,
     },
   })
     .composite([
-      { input: logo, top: 10, left: 12 },
+      { input: logoCard, top: 7, left: 10 },
       {
         input: Buffer.from(
-          `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><text x="58" y="34" fill="#eef3f8" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="600">G Skydimo Ambilight App</text><rect y="53" width="${width}" height="4" fill="#14B8A6"/></svg>`
+          `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><text x="60" y="25" fill="#eef3f8" font-family="Segoe UI, Arial, sans-serif" font-size="12" font-weight="700">G Skydimo</text><text x="60" y="39" fill="#14B8A6" font-family="Segoe UI, Arial, sans-serif" font-size="8.5" font-weight="600">Ambilight App</text><rect y="53" width="${width}" height="4" fill="#14B8A6"/></svg>`
         ),
         top: 0,
         left: 0,
@@ -305,8 +214,7 @@ async function main() {
 
   await fs.access(LOGO_SOURCE);
 
-  processedLogoCache = null;
-  trimmedLogoCache = null;
+  logoBufferCache = null;
 
   const iconSizes = [256, 128, 64, 48, 32, 16];
   const iconPngBuffers = await Promise.all(iconSizes.map((size) => renderAppIcon(size)));

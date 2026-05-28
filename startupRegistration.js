@@ -64,14 +64,53 @@ function buildStartupTaskXml(exePath, args) {
 }
 
 function runSchtasks(args) {
-  execSync(`schtasks ${args}`, { stdio: "pipe", windowsHide: true });
+  try {
+    execSync(`schtasks ${args}`, { stdio: "pipe", windowsHide: true });
+  } catch (err) {
+    const stderr = err?.stderr ? String(err.stderr).trim() : "";
+    const stdout = err?.stdout ? String(err.stdout).trim() : "";
+    const detail = stderr || stdout || err?.message || "schtasks failed";
+    const wrapped = new Error(`schtasks failed: ${detail}`);
+    wrapped.code = err?.status ?? null;
+    wrapped.stderr = stderr;
+    wrapped.stdout = stdout;
+    throw wrapped;
+  }
+}
+
+function isTaskNotFoundError(err) {
+  const haystack = `${err?.stderr || ""} ${err?.stdout || ""} ${err?.message || ""}`.toLowerCase();
+  return (
+    haystack.includes("cannot find the file") ||
+    haystack.includes("does not exist") ||
+    haystack.includes("the system cannot find") ||
+    haystack.includes("not exist in the system")
+  );
 }
 
 function removeWindowsStartupTask() {
   try {
     runSchtasks(`/Delete /TN "${WINDOWS_STARTUP_TASK_NAME}" /F`);
+  } catch (err) {
+    if (isTaskNotFoundError(err)) {
+      return;
+    }
+    throw err;
+  }
+}
+
+function queryWindowsStartupTask() {
+  if (process.platform !== "win32") {
+    return { exists: false };
+  }
+  try {
+    execSync(`schtasks /Query /TN "${WINDOWS_STARTUP_TASK_NAME}"`, {
+      stdio: "pipe",
+      windowsHide: true,
+    });
+    return { exists: true };
   } catch {
-    // Task may not exist yet.
+    return { exists: false };
   }
 }
 
@@ -133,4 +172,5 @@ module.exports = {
   applyStartupProcessPriority,
   applyWindowsStartupRegistration,
   removeWindowsStartupTask,
+  queryWindowsStartupTask,
 };

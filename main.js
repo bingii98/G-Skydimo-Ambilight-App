@@ -15,11 +15,18 @@ const { loadAppBehavior, saveAppBehavior } = require("./appBehaviorState");
 const {
   applyStartupProcessPriority,
   applyWindowsStartupRegistration,
+  queryWindowsStartupTask,
 } = require("./startupRegistration");
 
 const isDev = !app.isPackaged && process.env.NODE_ENV === "development";
 const START_IN_TRAY_ARG = "--start-in-tray";
 const ASSETS_DIR = path.join(__dirname, "assets");
+
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+if (!gotSingleInstanceLock) {
+  app.quit();
+  process.exit(0);
+}
 
 function getAssetPath(filename) {
   return path.join(ASSETS_DIR, filename);
@@ -82,7 +89,7 @@ function applyLoginItemSettings() {
     // Dev mode runs through electron.exe — never register startup or Windows
     // will launch bare Electron on login (no app path / main.js).
     app.setLoginItemSettings({ openAtLogin: false });
-    return;
+    return { ok: true, error: null };
   }
 
   const startInTray = appBehavior.launchAtStartup && appBehavior.runInTray;
@@ -91,20 +98,29 @@ function applyLoginItemSettings() {
     // Task Scheduler gives us high launch priority and zero logon delay.
     // Registry Run entries (Electron default) cannot set process priority.
     app.setLoginItemSettings({ openAtLogin: false });
-    applyWindowsStartupRegistration({
-      enabled: appBehavior.launchAtStartup,
-      exePath: process.execPath,
-      startInTrayArg: startInTray ? START_IN_TRAY_ARG : null,
-    });
-    return;
+    try {
+      applyWindowsStartupRegistration({
+        enabled: appBehavior.launchAtStartup,
+        exePath: process.execPath,
+        startInTrayArg: startInTray ? START_IN_TRAY_ARG : null,
+      });
+      return { ok: true, error: null };
+    } catch (err) {
+      return { ok: false, error: err?.message || "Failed to register Windows startup task" };
+    }
   }
 
-  app.setLoginItemSettings({
-    openAtLogin: appBehavior.launchAtStartup,
-    openAsHidden: startInTray,
-    path: process.execPath,
-    args: startInTray ? [START_IN_TRAY_ARG] : [],
-  });
+  try {
+    app.setLoginItemSettings({
+      openAtLogin: appBehavior.launchAtStartup,
+      openAsHidden: startInTray,
+      path: process.execPath,
+      args: startInTray ? [START_IN_TRAY_ARG] : [],
+    });
+    return { ok: true, error: null };
+  } catch (err) {
+    return { ok: false, error: err?.message || "Failed to set login item" };
+  }
 }
 
 function shouldStartHiddenInTray() {
@@ -199,6 +215,20 @@ function attachWindowStateHandlers() {
   });
 }
 
+function focusMainWindow() {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    return false;
+  }
+  if (mainWindow.isMinimized()) {
+    mainWindow.restore();
+  }
+  if (!mainWindow.isVisible()) {
+    mainWindow.show();
+  }
+  mainWindow.focus();
+  return true;
+}
+
 function createTray() {
   if (tray) {
     return;
@@ -211,10 +241,7 @@ function createTray() {
       {
         label: `Open ${APP_NAME}`,
         click: () => {
-          if (mainWindow && !mainWindow.isDestroyed()) {
-            mainWindow.show();
-            mainWindow.focus();
-          }
+          focusMainWindow();
         },
       },
       { type: "separator" },
@@ -228,10 +255,7 @@ function createTray() {
     ])
   );
   tray.on("double-click", () => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.show();
-      mainWindow.focus();
-    }
+    focusMainWindow();
   });
 }
 
@@ -243,6 +267,10 @@ function destroyTray() {
 }
 
 function createWindow() {
+  if (focusMainWindow()) {
+    return;
+  }
+
   if (!windowState) {
     windowState = loadWindowState();
   }
@@ -459,8 +487,9 @@ ipcMain.handle("app:setBehavior", async (_event, behavior = {}) => {
     loginItemsChanged = true;
   }
 
+  let startupRegistration = { ok: true, error: null };
   if (loginItemsChanged) {
-    applyLoginItemSettings();
+    startupRegistration = applyLoginItemSettings();
   }
 
   saveAppBehavior({
@@ -471,6 +500,20 @@ ipcMain.handle("app:setBehavior", async (_event, behavior = {}) => {
   return {
     runInTray: appBehavior.runInTray,
     launchAtStartup: appBehavior.launchAtStartup,
+    startupRegistration,
+  };
+});
+
+ipcMain.handle("app:getStartupStatus", async () => {
+  const desired = Boolean(appBehavior.launchAtStartup);
+  if (process.platform !== "win32" || !app.isPackaged) {
+    return { registered: desired, desired, mismatch: false };
+  }
+  const { exists } = queryWindowsStartupTask();
+  return {
+    registered: exists,
+    desired,
+    mismatch: exists !== desired,
   };
 });
 
@@ -514,6 +557,12 @@ ipcMain.handle("window:toggleDevTools", async () => {
   return true;
 });
 
+app.on("second-instance", () => {
+  if (!focusMainWindow()) {
+    createWindow();
+  }
+});
+
 app.whenReady().then(() => {
   app.setName(APP_NAME);
   Object.assign(appBehavior, loadAppBehavior());
@@ -526,12 +575,7 @@ app.whenReady().then(() => {
   createWindow();
 
   app.on("activate", () => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.show();
-      mainWindow.focus();
-      return;
-    }
-    if (BrowserWindow.getAllWindows().length === 0) {
+    if (!focusMainWindow()) {
       createWindow();
     }
   });

@@ -30,3 +30,7 @@
   !define MUI_UNWELCOMEPAGE_TEXT "This will remove G Skydimo Ambilight App and its Start Menu / Desktop shortcuts from your computer.$\r$\n$\r$\nYour saved settings inside the app may remain until you delete app data manually.$\r$\n$\r$\nClick Next to continue."
   !insertmacro MUI_UNPAGE_WELCOME
 !macroend
+
+!macro customUnInstall
+  nsExec::ExecToLog 'schtasks /Delete /TN "G Skydimo Ambilight App Startup" /F'
+!macroend

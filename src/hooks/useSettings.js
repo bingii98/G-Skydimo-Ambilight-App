@@ -2,6 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { HISTORY_KEY, MAX_HISTORY, SETTINGS_KEY } from "../lib/constants";
 import { sanitizeSettings } from "../lib/settingsSanitize";
 import { skydimo } from "../lib/skydimoApi";
+import {
+  toastStartupOutOfSync,
+  toastStartupRegistrationFailed,
+} from "../lib/appToast";
 
 const DEFAULT_SETTINGS = {
   hex: "#FFD700",
@@ -61,23 +65,51 @@ function loadHistory() {
   }
 }
 
+function persistSettings(merged) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(merged));
+}
+
+function handleBehaviorResult(result, setStartupError) {
+  const reg = result?.startupRegistration;
+  if (reg && reg.ok === false) {
+    setStartupError(reg.error || "Failed to register Windows startup task");
+    toastStartupRegistrationFailed(reg.error);
+    return false;
+  }
+  setStartupError(null);
+  return true;
+}
+
 export function useSettings() {
   const [settings, setSettings] = useState(loadSettings);
   const [history, setHistory] = useState(loadHistory);
+  const [startupError, setStartupError] = useState(null);
 
   const saveSettings = useCallback((next) => {
+    let mergedSnapshot = null;
     setSettings((current) => {
       const merged = sanitizeSettings(
         { ...current, ...next, savedAt: new Date().toISOString() },
         DEFAULT_SETTINGS
       );
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(merged));
-      skydimo.setAppBehavior({
-        runInTray: merged.runInTray,
-        launchAtStartup: merged.launchAtStartup,
-      });
+      persistSettings(merged);
+      mergedSnapshot = merged;
       return merged;
     });
+
+    if (mergedSnapshot) {
+      Promise.resolve(
+        skydimo.setAppBehavior({
+          runInTray: mergedSnapshot.runInTray,
+          launchAtStartup: mergedSnapshot.launchAtStartup,
+        })
+      )
+        .then((result) => handleBehaviorResult(result, setStartupError))
+        .catch((err) => {
+          setStartupError(err?.message || "Could not contact main process");
+          toastStartupRegistrationFailed(err?.message);
+        });
+    }
   }, []);
 
   const addHistory = useCallback((hex) => {
@@ -98,11 +130,53 @@ export function useSettings() {
   }, []);
 
   useEffect(() => {
-    skydimo.setAppBehavior({
-      runInTray: settings.runInTray,
-      launchAtStartup: settings.launchAtStartup,
-    });
-  }, [settings.runInTray, settings.launchAtStartup]);
+    let cancelled = false;
+
+    Promise.resolve(
+      skydimo.setAppBehavior({
+        runInTray: settings.runInTray,
+        launchAtStartup: settings.launchAtStartup,
+      })
+    )
+      .then((result) => {
+        if (cancelled) return;
+        handleBehaviorResult(result, setStartupError);
+      })
+      .catch(() => {
+        // Initial sync best-effort; getStartupStatus below will reconcile.
+      });
+
+    Promise.resolve(skydimo.getStartupStatus())
+      .then((status) => {
+        if (cancelled || !status) return;
+        if (status.mismatch) {
+          toastStartupOutOfSync();
+          setSettings((current) => {
+            if (current.launchAtStartup === Boolean(status.registered)) {
+              return current;
+            }
+            const merged = sanitizeSettings(
+              {
+                ...current,
+                launchAtStartup: Boolean(status.registered),
+                savedAt: new Date().toISOString(),
+              },
+              DEFAULT_SETTINGS
+            );
+            persistSettings(merged);
+            return merged;
+          });
+        }
+      })
+      .catch(() => {
+        // Status query is non-critical; ignore.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
     settings,
@@ -110,5 +184,6 @@ export function useSettings() {
     saveSettings,
     addHistory,
     clearHistory,
+    startupError,
   };
 }

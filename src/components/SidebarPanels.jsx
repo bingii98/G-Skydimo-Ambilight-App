@@ -321,7 +321,7 @@ export function DevicePanelActions({
   );
 }
 
-export function SettingsPanel({ settings, onChange }) {
+export function SettingsPanel({ settings, onChange, startupError = null }) {
   return (
     <Stack gap="lg">
       <Box>
@@ -356,6 +356,12 @@ export function SettingsPanel({ settings, onChange }) {
             onChange={(event) => onChange({ launchAtStartup: event.currentTarget.checked })}
             color="teal"
           />
+          {startupError && settings.launchAtStartup && (
+            <Text size="xs" c="red" lh={1.5}>
+              Couldn't register the Windows startup task: {startupError}. Try running the
+              app once as Administrator, or check Task Scheduler permissions.
+            </Text>
+          )}
           <Switch
             label="Run in system tray when closing"
             size="sm"

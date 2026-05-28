@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { Button, Collapse, Group, Text } from "@mantine/core";
 import {
   IconAlertTriangle,
-  IconBolt,
   IconCheck,
   IconChevronDown,
   IconCopy,
@@ -10,6 +9,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { APP_NAME, APP_NAME_PRIMARY, APP_NAME_TAG } from "../lib/constants";
+import appLogoUrl from "../assets/app-logo.png";
 
 function buildErrorReport(error, errorInfo) {
   const parts = [
@@ -53,7 +53,7 @@ export function CrashScreen({ error, errorInfo, onReload, onResetAndReload }) {
       <div className="crash-screen__frame">
         <header className="crash-screen__brand">
           <span className="crash-screen__logo" aria-hidden>
-            <IconBolt size={16} stroke={2.4} />
+            <img src={appLogoUrl} alt="" draggable={false} />
           </span>
           <div className="crash-screen__brand-text">
             <span className="crash-screen__brand-name">{APP_NAME_PRIMARY}</span>

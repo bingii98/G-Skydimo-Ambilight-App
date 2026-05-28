@@ -80,7 +80,7 @@ function sleep(ms) {
 
 export default function App() {
   const { state, scan, connect, connectBest, disconnect, setOptions, setPixels } = useSkydimo();
-  const { settings, history, saveSettings, addHistory, clearHistory } = useSettings();
+  const { settings, history, saveSettings, addHistory, clearHistory, startupError } = useSettings();
 
   const [selectedPort, setSelectedPort] = useState(null);
   const [activeNav, setActiveNav] = useState("devices");
@@ -995,6 +995,7 @@ export default function App() {
                 nav={activeNav}
                 state={state}
                 settings={settings}
+                startupError={startupError}
                 ledCount={ledCount}
                 deviceModel={deviceModel}
                 history={history}

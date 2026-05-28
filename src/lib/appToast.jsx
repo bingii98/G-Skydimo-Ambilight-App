@@ -294,6 +294,31 @@ export function toastAiAnimationApplied(mode, effectLabel) {
   });
 }
 
+export function toastStartupRegistrationFailed(message) {
+  showToast({
+    id: "startup-registration",
+    variant: "error",
+    title: "Couldn't register Windows startup",
+    message:
+      message ||
+      "Try running the app once as Administrator or check Task Scheduler permissions.",
+    icon: <IconAlertTriangle size={18} stroke={1.75} />,
+    autoClose: ERROR_AUTO_CLOSE,
+  });
+}
+
+export function toastStartupOutOfSync() {
+  showToast({
+    id: "startup-registration",
+    variant: "warning",
+    title: "Startup setting was changed by Windows",
+    message:
+      "The scheduled task for launch-at-startup didn't match your saved setting. We've synced it now.",
+    icon: <IconAlertTriangle size={18} stroke={1.75} />,
+    autoClose: ERROR_AUTO_CLOSE,
+  });
+}
+
 export function toastAiAnimationError(message) {
   showToast({
     variant: "error",

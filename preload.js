@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld("skydimo", {
   setPixels: (pixels, ledCount) =>
     ipcRenderer.invoke("device:setPixels", pixels, ledCount),
   setAppBehavior: (behavior) => ipcRenderer.invoke("app:setBehavior", behavior),
+  getStartupStatus: () => ipcRenderer.invoke("app:getStartupStatus"),
   suggestGradient: (options) =>
     ipcRenderer.invoke("openai:suggestGradient", options),
   suggestAnimation: (options) =>

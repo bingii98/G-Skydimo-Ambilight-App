@@ -9,7 +9,14 @@ const skydimoStub = {
   disconnect: () => Promise.resolve(null),
   setColor: () => Promise.resolve(null),
   setPixels: () => Promise.resolve(null),
-  setAppBehavior: () => Promise.resolve(null),
+  setAppBehavior: () =>
+    Promise.resolve({
+      runInTray: false,
+      launchAtStartup: false,
+      startupRegistration: { ok: true, error: null },
+    }),
+  getStartupStatus: () =>
+    Promise.resolve({ registered: false, desired: false, mismatch: false }),
   suggestGradient: () =>
     Promise.reject(new Error("AI gradient suggestions require the Electron app")),
   suggestAnimation: () =>

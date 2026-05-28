@@ -19,6 +19,7 @@ export function MiddlePanel({
   nav,
   state,
   settings,
+  startupError,
   ledCount,
   deviceModel,
   history,
@@ -95,7 +96,11 @@ export function MiddlePanel({
         )}
 
         {nav === "settings" && (
-          <SettingsPanel settings={settings} onChange={onSettingsChange} />
+          <SettingsPanel
+            settings={settings}
+            onChange={onSettingsChange}
+            startupError={startupError}
+          />
         )}
 
         {nav === "studio" && (
