@@ -11,7 +11,6 @@ import {
 } from "@tabler/icons-react";
 import { ColorControls } from "./components/ColorStudio";
 import { MiddlePanel } from "./components/MiddlePanel";
-import { NavRail } from "./components/NavRail";
 import { DiscordTitleBar } from "./components/DiscordTitleBar";
 import { StudioHeader } from "./components/StudioHeader";
 import { StatusBanner } from "./components/StatusBanner";
@@ -989,10 +988,10 @@ export default function App() {
             )}
 
             <div className="soft-layout">
-              <NavRail active={activeNav} onChange={setActiveNav} connected={connected} />
-
               <MiddlePanel
                 nav={activeNav}
+                onNavChange={setActiveNav}
+                connected={connected}
                 state={state}
                 settings={settings}
                 startupError={startupError}

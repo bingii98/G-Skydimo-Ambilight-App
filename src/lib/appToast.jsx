@@ -301,7 +301,7 @@ export function toastStartupRegistrationFailed(message) {
     title: "Couldn't register Windows startup",
     message:
       message ||
-      "Try running the app once as Administrator or check Task Scheduler permissions.",
+      "Startup could not be registered. Check Windows login-item permissions or try running as Administrator.",
     icon: <IconAlertTriangle size={18} stroke={1.75} />,
     autoClose: ERROR_AUTO_CLOSE,
   });

@@ -88,11 +88,20 @@ function isTaskNotFoundError(err) {
   );
 }
 
+function isAccessDeniedError(err) {
+  const haystack = `${err?.stderr || ""} ${err?.stdout || ""} ${err?.message || ""}`.toLowerCase();
+  return haystack.includes("access is denied") || haystack.includes("access denied");
+}
+
+function buildWindowsStartupArgs(extraArgs = []) {
+  return [STARTUP_LAUNCH_ARG, ...extraArgs];
+}
+
 function removeWindowsStartupTask() {
   try {
     runSchtasks(`/Delete /TN "${WINDOWS_STARTUP_TASK_NAME}" /F`);
   } catch (err) {
-    if (isTaskNotFoundError(err)) {
+    if (isTaskNotFoundError(err) || isAccessDeniedError(err)) {
       return;
     }
     throw err;
@@ -115,7 +124,7 @@ function queryWindowsStartupTask() {
 }
 
 function registerWindowsStartupTask(exePath, extraArgs = []) {
-  const args = [STARTUP_LAUNCH_ARG, ...extraArgs];
+  const args = buildWindowsStartupArgs(extraArgs);
   const tempPath = path.join(os.tmpdir(), "gskydimo-startup-task.xml");
   const xml = buildStartupTaskXml(exePath, args);
   fs.writeFileSync(tempPath, Buffer.from(`\ufeff${xml}`, "utf16le"));
@@ -171,6 +180,8 @@ module.exports = {
   WINDOWS_STARTUP_TASK_NAME,
   applyStartupProcessPriority,
   applyWindowsStartupRegistration,
+  buildWindowsStartupArgs,
+  isAccessDeniedError,
   removeWindowsStartupTask,
   queryWindowsStartupTask,
 };

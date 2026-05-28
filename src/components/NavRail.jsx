@@ -7,9 +7,12 @@ const NAV_ITEMS = [
   { id: "settings", label: "Settings", icon: IconSettings },
 ];
 
-export function NavRail({ active, onChange, connected }) {
+export function NavRail({ active, onChange, connected, embedded = false }) {
   return (
-    <nav className="nav-rail" aria-label="Navigation">
+    <nav
+      className={`nav-rail${embedded ? " nav-rail--embedded" : ""}`}
+      aria-label="Navigation"
+    >
       <div className="nav-rail__top">
         {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
           <Tooltip key={id} label={label} position="right" withArrow openDelay={300}>

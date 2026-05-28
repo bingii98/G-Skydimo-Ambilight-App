@@ -245,8 +245,8 @@ export function applyCssVariables() {
   root.style.setProperty("--sk-radius-md", "16px");
   root.style.setProperty("--sk-radius-lg", "20px");
   root.style.setProperty("--sk-radius-xl", "24px");
-  root.style.setProperty("--sk-rail-width", "68px");
-  root.style.setProperty("--sk-list-width", "300px");
+  root.style.setProperty("--sk-rail-width", "52px");
+  root.style.setProperty("--sk-list-width", "420px");
 
   root.style.setProperty("--sk-scrollbar-size", "8px");
   root.style.setProperty("--sk-scrollbar-track", "transparent");

@@ -15,6 +15,8 @@ const { loadAppBehavior, saveAppBehavior } = require("./appBehaviorState");
 const {
   applyStartupProcessPriority,
   applyWindowsStartupRegistration,
+  buildWindowsStartupArgs,
+  isAccessDeniedError,
   queryWindowsStartupTask,
 } = require("./startupRegistration");
 
@@ -95,18 +97,51 @@ function applyLoginItemSettings() {
   const startInTray = appBehavior.launchAtStartup && appBehavior.runInTray;
 
   if (process.platform === "win32") {
-    // Task Scheduler gives us high launch priority and zero logon delay.
-    // Registry Run entries (Electron default) cannot set process priority.
+    // Prefer Task Scheduler (high launch priority, zero logon delay). Fall back to
+    // the per-user Run registry key when schtasks is blocked (no admin / policy).
     app.setLoginItemSettings({ openAtLogin: false });
+    if (!appBehavior.launchAtStartup) {
+      try {
+        applyWindowsStartupRegistration({
+          enabled: false,
+          exePath: process.execPath,
+          startInTrayArg: null,
+        });
+      } catch (err) {
+        return { ok: false, error: err?.message || "Failed to remove Windows startup task" };
+      }
+      return { ok: true, error: null };
+    }
+
+    const startInTrayArg = startInTray ? START_IN_TRAY_ARG : null;
+    const startupArgs = buildWindowsStartupArgs(startInTrayArg ? [startInTrayArg] : []);
+
     try {
       applyWindowsStartupRegistration({
-        enabled: appBehavior.launchAtStartup,
+        enabled: true,
         exePath: process.execPath,
-        startInTrayArg: startInTray ? START_IN_TRAY_ARG : null,
+        startInTrayArg,
       });
       return { ok: true, error: null };
     } catch (err) {
-      return { ok: false, error: err?.message || "Failed to register Windows startup task" };
+      if (!isAccessDeniedError(err)) {
+        return { ok: false, error: err?.message || "Failed to register Windows startup task" };
+      }
+    }
+
+    try {
+      app.setLoginItemSettings({
+        openAtLogin: true,
+        openAsHidden: startInTray,
+        path: process.execPath,
+        args: startupArgs,
+      });
+      return { ok: true, error: null };
+    } catch (err) {
+      return {
+        ok: false,
+        error: err?.message || "Failed to register Windows startup (registry fallback)",
+      };
     }
   }
 
@@ -509,11 +544,13 @@ ipcMain.handle("app:getStartupStatus", async () => {
   if (process.platform !== "win32" || !app.isPackaged) {
     return { registered: desired, desired, mismatch: false };
   }
-  const { exists } = queryWindowsStartupTask();
+  const { exists: taskExists } = queryWindowsStartupTask();
+  const loginItemRegistered = Boolean(app.getLoginItemSettings().openAtLogin);
+  const registered = taskExists || loginItemRegistered;
   return {
-    registered: exists,
+    registered,
     desired,
-    mismatch: exists !== desired,
+    mismatch: registered !== desired,
   };
 });
 

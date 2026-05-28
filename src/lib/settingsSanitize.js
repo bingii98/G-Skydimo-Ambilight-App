@@ -144,7 +144,10 @@ export function sanitizeSettings(settings, defaults = {}) {
       };
     }
 
-    if (Array.isArray(next.animationColorStops) || next.animationId) {
+    if (
+      next.colorMode === "animation" &&
+      (Array.isArray(next.animationColorStops) || next.animationId)
+    ) {
       Object.assign(next, buildAnimationColorPatch(next));
     }
 

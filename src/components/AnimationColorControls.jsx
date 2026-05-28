@@ -433,11 +433,13 @@ export function AnimationColorControls({ settings, onChange, compactHint }) {
 
 export function AnimationSingleColorControl({ settings, onChange, label = "Color" }) {
   const handleChange = (hex) => {
+    const normalized = normalizeHex(hex);
+    if (!normalized) return;
     onChange(
       buildAnimationColorPatch(settings, {
         animationColorStops: [
-          { id: "anim-single", position: 0, color: hex },
-          { id: "anim-single-end", position: 1, color: hex },
+          { id: "anim-single", position: 0, color: normalized },
+          { id: "anim-single-end", position: 1, color: normalized },
         ],
         animationActiveColorStopId: "anim-single",
       })

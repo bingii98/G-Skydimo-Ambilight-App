@@ -5,6 +5,7 @@ import {
   IconSearch,
   IconSettings,
 } from "@tabler/icons-react";
+import { NavRail } from "./NavRail";
 import { ConnectionPanel, DevicePanelActions, SettingsPanel } from "./SidebarPanels";
 import { PanelTitle } from "./ui/AppPanel";
 import { ensureHex } from "../lib/colorUtils";
@@ -17,6 +18,8 @@ const NAV_META = {
 
 export function MiddlePanel({
   nav,
+  onNavChange,
+  connected,
   state,
   settings,
   startupError,
@@ -49,25 +52,35 @@ export function MiddlePanel({
   const hexUpper = ensureHex(settings.hex).toUpperCase();
 
   return (
-    <aside className="middle-panel">
-      <div className="middle-panel__head">
-        <PanelTitle icon={navMeta.icon} size="lg" className="middle-panel__title">
-          {navMeta.title}
-        </PanelTitle>
-        {nav === "devices" && (
-          <TextInput
-            className="middle-panel__search"
-            placeholder="Search COM ports..."
-            value={portFilter}
-            onChange={(e) => onPortFilterChange(e.currentTarget.value)}
-            leftSection={<IconSearch size={16} stroke={1.6} />}
-            radius="xl"
-            size="sm"
-          />
-        )}
-      </div>
+    <aside className={`middle-panel${nav === "devices" ? " middle-panel--devices" : ""}`}>
+      <div className="middle-panel__shell">
+        <NavRail active={nav} onChange={onNavChange} connected={connected} embedded />
 
-      <ScrollArea className="middle-panel__body" type="auto" offsetScrollbars>
+        <div className="middle-panel__content">
+          <div
+            className={`middle-panel__head${nav === "devices" ? " middle-panel__head--devices" : ""}`}
+          >
+            <PanelTitle
+              icon={navMeta.icon}
+              size={nav === "devices" ? "md" : "lg"}
+              className="middle-panel__title"
+            >
+              {navMeta.title}
+            </PanelTitle>
+            {nav === "devices" && (
+              <TextInput
+                className="middle-panel__search"
+                placeholder="Search ports..."
+                value={portFilter}
+                onChange={(e) => onPortFilterChange(e.currentTarget.value)}
+                leftSection={<IconSearch size={15} stroke={1.6} />}
+                radius="xl"
+                size="xs"
+              />
+            )}
+          </div>
+
+          <ScrollArea className="middle-panel__body" type="auto" offsetScrollbars>
         {nav === "devices" && (
           <ConnectionPanel
             state={state}
@@ -134,17 +147,19 @@ export function MiddlePanel({
             )}
           </div>
         )}
-      </ScrollArea>
+          </ScrollArea>
 
-      {nav === "devices" && (
-        <DevicePanelActions
-          connected={state?.connected}
-          onScan={onScan}
-          onToggleConnection={onToggleConnection}
-          scanning={scanning}
-          connecting={connecting}
-        />
-      )}
+          {nav === "devices" && (
+            <DevicePanelActions
+              connected={state?.connected}
+              onScan={onScan}
+              onToggleConnection={onToggleConnection}
+              scanning={scanning}
+              connecting={connecting}
+            />
+          )}
+        </div>
+      </div>
     </aside>
   );
 }

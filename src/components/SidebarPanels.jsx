@@ -134,7 +134,7 @@ export function ConnectionPanel({
     });
 
   return (
-    <Stack gap="md">
+    <Stack gap="sm" className="connection-panel">
       {connected && (
         <Box className={`soft-info-card device-card ${ledOn ? "device-card--online" : "device-card--off"}`}>
           <div className="device-card__accent" aria-hidden />
@@ -296,11 +296,12 @@ export function DevicePanelActions({
   connecting,
 }) {
   return (
-    <Group grow preventGrowOverflow={false} className="middle-panel__actions">
+    <Group grow preventGrowOverflow={false} className="middle-panel__actions" gap="xs">
       <Button
         variant="default"
-        radius="xl"
-        leftSection={<IconRefresh size={16} />}
+        radius="md"
+        size="compact-sm"
+        leftSection={<IconRefresh size={15} />}
         onClick={onScan}
         loading={scanning}
       >
@@ -308,10 +309,11 @@ export function DevicePanelActions({
       </Button>
       <Button
         className="btn-soft-primary"
-        radius="xl"
+        radius="md"
+        size="compact-sm"
         variant={connected ? "default" : "filled"}
         color={connected ? "gray" : "dark"}
-        leftSection={connected ? <IconPlugConnectedX size={16} /> : <IconPlugConnected size={16} />}
+        leftSection={connected ? <IconPlugConnectedX size={15} /> : <IconPlugConnected size={15} />}
         onClick={onToggleConnection}
         loading={connecting}
       >
@@ -358,8 +360,8 @@ export function SettingsPanel({ settings, onChange, startupError = null }) {
           />
           {startupError && settings.launchAtStartup && (
             <Text size="xs" c="red" lh={1.5}>
-              Couldn't register the Windows startup task: {startupError}. Try running the
-              app once as Administrator, or check Task Scheduler permissions.
+              Couldn't register startup: {startupError}. Check Windows login-item permissions
+              or try running the app once as Administrator for Task Scheduler registration.
             </Text>
           )}
           <Switch

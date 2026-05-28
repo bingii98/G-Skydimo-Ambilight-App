@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button, Text, Tooltip } from "@mantine/core";
+import { Text, Tooltip } from "@mantine/core";
 import {
   IconArrowBackUp,
   IconArrowsMaximize,
@@ -9,21 +9,16 @@ import {
   IconHandClick,
   IconRotate2,
   IconRotateClockwise,
-  IconSparkles,
-  IconWand,
 } from "@tabler/icons-react";
 import { LedLayoutDiagram } from "./LedLayoutDiagram";
+import { CalibrationStepTour, calibTourSpotlightClass } from "./CalibrationStepTour";
 import { getLogicalZoneForLedIndex } from "../lib/ledLayout";
 import {
   inferOrientationFromCalibration,
 } from "../lib/calibrationInfer";
 import {
-  formatStripCountsSummary,
   getDiagramLayout,
   getLayoutSource,
-  getProfileExpectedZeroZone,
-  getProfileStripCounts,
-  getProfileWirePath,
   inferZoneRotation,
 } from "../lib/zoneLayout";
 import { toastOrientationCalibrated, toastOrientationInferFailed } from "../lib/appToast";
@@ -35,7 +30,6 @@ const ZONE_LABELS = {
   left: "Left",
 };
 
-const STEP_PROFILE = "profile";
 const STEP_DIRECTION = "direction";
 const STEP_EDGE = "edge";
 const STEP_LENGTH = "length";
@@ -68,6 +62,7 @@ export function OrientationConfig({
   const [testingZones, setTestingZones] = useState(false);
   const chaseRunIdRef = useRef(0);
   const [hoverZone, setHoverZone] = useState(null);
+  const [tourSpotlight, setTourSpotlight] = useState(null);
   const [calibDraft, setCalibDraft] = useState({
     direction: null,
     startEdge: null,
@@ -77,37 +72,22 @@ export function OrientationConfig({
   const orientationConfirmed = Boolean(settings?.orientationConfirmed);
   const layoutSource = getLayoutSource(settings, deviceModel, ledCount);
 
-  const profileWirePath = useMemo(
-    () => getProfileWirePath(deviceModel, ledCount),
-    [deviceModel, ledCount]
-  );
-  const profileCounts = useMemo(
-    () => getProfileStripCounts(deviceModel, ledCount),
-    [deviceModel, ledCount]
-  );
-  const hasProfile = Boolean(profileWirePath && profileCounts);
-  const profileExpectedZone = useMemo(
-    () => getProfileExpectedZeroZone(deviceModel, ledCount),
-    [deviceModel, ledCount]
-  );
-
-  /** Zone containing LED 1 on the wire path (before map rotation). */
-  const wireZeroZone = useMemo(
-    () => getLogicalZoneForLedIndex(deviceModel, ledCount, 0, settings, 0),
-    [deviceModel, ledCount, settings]
-  );
-
   const resolveInitialStep = useCallback(() => {
     if (orientationConfirmed) return STEP_DONE;
-    if (hasProfile) return STEP_PROFILE;
     return STEP_DIRECTION;
-  }, [orientationConfirmed, hasProfile]);
+  }, [orientationConfirmed]);
 
   const [wizardStep, setWizardStep] = useState(resolveInitialStep);
 
   useEffect(() => {
     setWizardStep(resolveInitialStep());
   }, [resolveInitialStep]);
+
+  /** Zone containing LED 1 on the wire path (before map rotation). */
+  const wireZeroZone = useMemo(
+    () => getLogicalZoneForLedIndex(deviceModel, ledCount, 0, settings, 0),
+    [deviceModel, ledCount, settings]
+  );
 
   useEffect(() => {
     if (!onCalibrationLock) return;
@@ -186,20 +166,7 @@ export function OrientationConfig({
     };
   }, [wizardStep, connected, onFlashZone]);
 
-  const acceptProfile = useCallback(() => {
-    if (!profileWirePath || !profileCounts) return;
-    onSettingsChange({
-      zoneRotation: 0,
-      orientationConfirmed: true,
-      stripCounts: profileCounts,
-      stripOrigin: profileWirePath.origin,
-      stripDirection: profileWirePath.direction,
-    });
-    toastOrientationCalibrated(0);
-    setWizardStep(STEP_DONE);
-  }, [profileWirePath, profileCounts, onSettingsChange]);
-
-  const skipToCalibrate = useCallback(() => {
+  const beginDirectionStep = useCallback(() => {
     setCalibDraft({ direction: null, startEdge: null, edgeLength: null });
     setWizardStep(STEP_DIRECTION);
     void runChase();
@@ -304,13 +271,7 @@ export function OrientationConfig({
 
   const handleRecalibrate = () => {
     onSettingsChange({ orientationConfirmed: false });
-    setCalibDraft({ direction: null, startEdge: null, edgeLength: null });
-    if (hasProfile) {
-      setWizardStep(STEP_PROFILE);
-    } else {
-      setWizardStep(STEP_DIRECTION);
-      void runChase();
-    }
+    beginDirectionStep();
   };
 
   const stepIndex = useMemo(() => {
@@ -327,46 +288,6 @@ export function OrientationConfig({
     wizardStep === STEP_EDGE && hoverZone && hoverZone !== wireZeroZone
       ? inferZoneRotation(wireZeroZone, hoverZone)
       : null;
-
-  const hint = useMemo(() => {
-    if (wizardStep === STEP_DIRECTION) {
-      return {
-        message: chaseRunning
-          ? "Follow the moving light — pick its direction."
-          : connected
-            ? "Pick the direction you see on your desk."
-            : "Connect your device to start.",
-        color: chaseRunning ? "teal" : "dimmed",
-        fw: chaseRunning ? 600 : undefined,
-      };
-    }
-
-    if (wizardStep === STEP_EDGE) {
-      if (hoverZone) {
-        return {
-          message: `Tap ${ZONE_LABELS[hoverZone]} if that edge is lit.`,
-          color: "teal",
-          fw: 600,
-        };
-      }
-
-      return {
-        message: "Tap the lit edge on the frame.",
-        color: "teal",
-        fw: 600,
-      };
-    }
-
-    if (wizardStep === STEP_LENGTH) {
-      return {
-        message: "Is the lit edge short (N) or long (D)?",
-        color: "teal",
-        fw: 600,
-      };
-    }
-
-    return null;
-  }, [wizardStep, chaseRunning, connected, hoverZone]);
 
   const travelDirection = settings?.stripDirection === "ccw" ? "ccw" : "cw";
   const TravelDirectionIcon = travelDirection === "ccw" ? IconRotate2 : IconRotateClockwise;
@@ -424,52 +345,36 @@ export function OrientationConfig({
         </div>
       ) : null}
 
-      {wizardStep === STEP_PROFILE ? (
-        <ProfileSuggestCard
-          counts={profileCounts}
-          expectedZone={profileExpectedZone}
-          onAccept={acceptProfile}
-          onCalibrate={skipToCalibrate}
+      {showWizard ? (
+        <CalibrationStepTour
+          wizardStep={wizardStep}
           connected={connected}
+          chaseRunning={chaseRunning}
+          hoverZoneLabel={hoverZone ? ZONE_LABELS[hoverZone] : null}
+          hoverZoneId={hoverZone}
+          startEdgeLabel={calibDraft.startEdge ? ZONE_LABELS[calibDraft.startEdge] : null}
+          onSpotlight={setTourSpotlight}
         />
-      ) : null}
-
-      {hint ? (
-        <div
-          className={[
-            "zone-calibration__hint",
-            hint.color === "teal" ? "zone-calibration__hint--active" : "zone-calibration__hint--muted",
-          ].join(" ")}
-          aria-live="polite"
-        >
-          <Text
-            size="xs"
-            c={hint.color === "teal" ? undefined : "dimmed"}
-            fw={hint.fw}
-            lh={1.45}
-            className="zone-calibration__hint-text"
-          >
-            {hint.message}
-          </Text>
-        </div>
       ) : null}
 
       {wizardStep === STEP_EDGE ? (
-        <LedLayoutDiagram
-          settings={settings}
-          ledCount={ledCount}
-          deviceModel={deviceModel}
-          zoneRotation={0}
-          mode="pick"
-          hoverZone={hoverZone}
-          onZonePick={handleEdgePick}
-          onZoneHover={setHoverZone}
-          pickPreviewRotation={previewHoverRotation}
-          showDots={false}
-          showCounts={false}
-          showLegend={false}
-          compact
-        />
+        <div className={calibTourSpotlightClass("edge-diagram", tourSpotlight)}>
+          <LedLayoutDiagram
+            settings={settings}
+            ledCount={ledCount}
+            deviceModel={deviceModel}
+            zoneRotation={0}
+            mode="pick"
+            hoverZone={hoverZone}
+            onZonePick={handleEdgePick}
+            onZoneHover={setHoverZone}
+            pickPreviewRotation={previewHoverRotation}
+            showDots={false}
+            showCounts={false}
+            showLegend={false}
+            compact
+          />
+        </div>
       ) : null}
 
       {wizardStep === STEP_LENGTH && calibDraft.startEdge ? (
@@ -508,7 +413,16 @@ export function OrientationConfig({
       ) : null}
 
       {wizardStep === STEP_DIRECTION ? (
-        <div className="zone-calibration__choice-grid zone-calibration__choice-grid--2" role="group" aria-label="Pick travel direction">
+        <div
+          className={[
+            "zone-calibration__choice-grid zone-calibration__choice-grid--2",
+            calibTourSpotlightClass("direction-choices", tourSpotlight),
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          role="group"
+          aria-label="Pick travel direction"
+        >
           <ChoiceCard
             label="Clockwise"
             icon={IconRotateClockwise}
@@ -528,7 +442,12 @@ export function OrientationConfig({
 
       {wizardStep === STEP_LENGTH ? (
         <div
-          className="zone-calibration__choice-grid zone-calibration__choice-grid--2"
+          className={[
+            "zone-calibration__choice-grid zone-calibration__choice-grid--2",
+            calibTourSpotlightClass("length-choices", tourSpotlight),
+          ]
+            .filter(Boolean)
+            .join(" ")}
           role="group"
           aria-label="Pick whether the lit edge is the shorter or longer side of your frame"
         >
@@ -549,110 +468,219 @@ export function OrientationConfig({
         </div>
       ) : null}
 
-      <div className="zone-calibration__actions">
-        {wizardStep === STEP_DIRECTION ? (
-          <Button
-            variant="filled"
-            color="teal"
-            size="compact-sm"
-            leftSection={<IconHandClick size={14} />}
+      {renderWizardActions(wizardStep, {
+        connected,
+        chaseRunning,
+        flashing,
+        testingZones,
+        tourSpotlight,
+        runChase,
+        flashStartEdge,
+        handleTestAllZones,
+        handleRecalibrate,
+        finishCalibrate,
+        setWizardStep,
+      })}
+
+    </div>
+  );
+}
+
+function CalibActionButton({
+  variant = "soft",
+  icon: Icon,
+  children,
+  loading = false,
+  disabled = false,
+  onClick,
+  title,
+}) {
+  const button = (
+    <button
+      type="button"
+      className={[
+        "zone-calibration__action-btn",
+        `zone-calibration__action-btn--${variant}`,
+        loading ? "zone-calibration__action-btn--loading" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      disabled={disabled || loading}
+      onClick={onClick}
+      aria-busy={loading || undefined}
+    >
+      <span className="zone-calibration__action-btn-icon" aria-hidden>
+        <Icon size={15} stroke={1.75} />
+      </span>
+      <span className="zone-calibration__action-btn-label">{children}</span>
+      {loading ? <span className="zone-calibration__action-btn-spinner" aria-hidden /> : null}
+    </button>
+  );
+
+  if (title) {
+    return (
+      <Tooltip label={title} openDelay={300}>
+        <span className="zone-calibration__action-btn-wrap">{button}</span>
+      </Tooltip>
+    );
+  }
+
+  return button;
+}
+
+function CalibActionsBar({ secondary, primary, tourSpotlight, primarySpotlight, secondarySpotlight }) {
+  if (!secondary && !primary) {
+    return null;
+  }
+
+  return (
+    <div className="zone-calibration__actions">
+      {secondary ? (
+        <div
+          className={[
+            "zone-calibration__actions-group zone-calibration__actions-group--secondary",
+            calibTourSpotlightClass(secondarySpotlight, tourSpotlight),
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {secondary}
+        </div>
+      ) : null}
+      {primary ? (
+        <div
+          className={[
+            "zone-calibration__actions-group zone-calibration__actions-group--primary",
+            calibTourSpotlightClass(primarySpotlight, tourSpotlight),
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {primary}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function renderWizardActions(
+  wizardStep,
+  {
+    connected,
+    chaseRunning,
+    flashing,
+    testingZones,
+    tourSpotlight,
+    runChase,
+    flashStartEdge,
+    handleTestAllZones,
+    handleRecalibrate,
+    finishCalibrate,
+    setWizardStep,
+  }
+) {
+  if (wizardStep === STEP_DIRECTION) {
+    return (
+      <CalibActionsBar
+        tourSpotlight={tourSpotlight}
+        primarySpotlight="direction-action"
+        primary={
+          <CalibActionButton
+            variant="primary"
+            icon={IconHandClick}
             onClick={() => void runChase()}
             disabled={!connected || chaseRunning}
             loading={chaseRunning}
           >
             Run chase again
-          </Button>
-        ) : null}
+          </CalibActionButton>
+        }
+      />
+    );
+  }
 
-        {wizardStep === STEP_EDGE ? (
-          <>
-            <Button
-              variant="light"
-              color="teal"
-              size="compact-sm"
-              leftSection={<IconBolt size={14} />}
-              onClick={() => void flashStartEdge()}
-              disabled={!connected || flashing}
-              loading={flashing}
-            >
-              Flash edge again
-            </Button>
-            <Button
-              variant="subtle"
-              color="gray"
-              size="compact-sm"
-              leftSection={<IconArrowBackUp size={14} />}
-              onClick={() => {
-                void finishCalibrate();
-                setWizardStep(STEP_DIRECTION);
-              }}
-            >
-              Back
-            </Button>
-          </>
-        ) : null}
-
-        {wizardStep === STEP_LENGTH ? (
-          <>
-            <Button
-              variant="light"
-              color="teal"
-              size="compact-sm"
-              leftSection={<IconBolt size={14} />}
-              onClick={() => void flashStartEdge()}
-              disabled={!connected || flashing}
-              loading={flashing}
-            >
-              Flash edge again
-            </Button>
-            <Button
-              variant="subtle"
-              color="gray"
-              size="compact-sm"
-              leftSection={<IconArrowBackUp size={14} />}
-              onClick={() => setWizardStep(STEP_EDGE)}
-            >
-              Back
-            </Button>
-          </>
-        ) : null}
-
-        {wizardStep === STEP_DONE ? (
-          <>
-            <Tooltip label="Flash all four edges in order" openDelay={300}>
-              <Button
-                variant="light"
-                color="teal"
-                size="compact-sm"
-                leftSection={<IconBolt size={14} />}
-                onClick={() => void handleTestAllZones()}
-                disabled={!connected || flashing || testingZones}
-                loading={testingZones}
-              >
-                Test all
-              </Button>
-            </Tooltip>
-            <Button variant="subtle" color="gray" size="compact-sm" onClick={handleRecalibrate}>
-              Recalibrate
-            </Button>
-          </>
-        ) : null}
-
-        {wizardStep === STEP_DIRECTION && hasProfile ? (
-          <Button
-            variant="subtle"
-            color="gray"
-            size="compact-sm"
-            leftSection={<IconArrowBackUp size={14} />}
-            onClick={() => setWizardStep(STEP_PROFILE)}
+  if (wizardStep === STEP_EDGE) {
+    return (
+      <CalibActionsBar
+        secondary={
+          <CalibActionButton
+            variant="ghost"
+            icon={IconArrowBackUp}
+            onClick={() => {
+              void finishCalibrate();
+              setWizardStep(STEP_DIRECTION);
+            }}
           >
             Back
-          </Button>
-        ) : null}
-      </div>
+          </CalibActionButton>
+        }
+        primary={
+          <CalibActionButton
+            variant="soft"
+            icon={IconBolt}
+            onClick={() => void flashStartEdge()}
+            disabled={!connected || flashing}
+            loading={flashing}
+          >
+            Flash edge again
+          </CalibActionButton>
+        }
+      />
+    );
+  }
 
-    </div>
-  );
+  if (wizardStep === STEP_LENGTH) {
+    return (
+      <CalibActionsBar
+        secondary={
+          <CalibActionButton
+            variant="ghost"
+            icon={IconArrowBackUp}
+            onClick={() => setWizardStep(STEP_EDGE)}
+          >
+            Back
+          </CalibActionButton>
+        }
+        primary={
+          <CalibActionButton
+            variant="soft"
+            icon={IconBolt}
+            onClick={() => void flashStartEdge()}
+            disabled={!connected || flashing}
+            loading={flashing}
+          >
+            Flash edge again
+          </CalibActionButton>
+        }
+      />
+    );
+  }
+
+  if (wizardStep === STEP_DONE) {
+    return (
+      <CalibActionsBar
+        secondary={
+          <CalibActionButton variant="ghost" icon={IconCompass} onClick={handleRecalibrate}>
+            Recalibrate
+          </CalibActionButton>
+        }
+        primary={
+          <CalibActionButton
+            variant="soft"
+            icon={IconBolt}
+            onClick={() => void handleTestAllZones()}
+            disabled={!connected || flashing || testingZones}
+            loading={testingZones}
+            title="Flash all four edges in order"
+          >
+            Test all edges
+          </CalibActionButton>
+        }
+      />
+    );
+  }
+
+  return null;
 }
 
 function ChoiceCard({ label, icon: Icon, active, recommended, disabled, onClick }) {
@@ -674,57 +702,5 @@ function ChoiceCard({ label, icon: Icon, active, recommended, disabled, onClick 
       </span>
       <span className="zone-calibration__choice-label">{label}</span>
     </button>
-  );
-}
-
-function ProfileSuggestCard({ counts, expectedZone, onAccept, onCalibrate, connected }) {
-  return (
-    <div className="zone-calibration__profile-card">
-      <div className="zone-calibration__profile-head">
-        <span className="zone-calibration__profile-icon" aria-hidden>
-          <IconWand size={16} stroke={1.75} />
-        </span>
-        <div className="zone-calibration__profile-text">
-          <Text size="xs" fw={700} className="zone-calibration__profile-title">
-            Known layout
-          </Text>
-          {counts ? (
-            <Text size="xs" c="dimmed" lh={1.4}>
-              {formatStripCountsSummary(counts)}
-            </Text>
-          ) : null}
-        </div>
-      </div>
-
-      {expectedZone ? (
-        <div className="zone-calibration__profile-hint">
-          <span className="zone-calibration__profile-pill">
-            LED 1 → {ZONE_LABELS[expectedZone]}
-          </span>
-        </div>
-      ) : null}
-
-      <div className="zone-calibration__profile-actions">
-        <Button
-          variant="filled"
-          color="teal"
-          size="compact-sm"
-          leftSection={<IconSparkles size={14} />}
-          onClick={onAccept}
-          disabled={!connected}
-        >
-          Use this layout
-        </Button>
-        <Button
-          variant="subtle"
-          color="gray"
-          size="compact-sm"
-          leftSection={<IconHandClick size={14} />}
-          onClick={onCalibrate}
-        >
-          Calibrate manually
-        </Button>
-      </div>
-    </div>
   );
 }
