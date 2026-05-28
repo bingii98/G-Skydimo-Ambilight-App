@@ -21,7 +21,7 @@ describe("openaiAnimation", () => {
       "#FFD700"
     );
 
-    expect(setup.animationId).toBe(ANIMATION_IDS.OCEAN);
+    expect(setup.animationId).toBe(ANIMATION_IDS.AURORA);
     expect(setup.speed).toBe(100);
     expect(setup.intensity).toBe(1);
     expect(setup.stops.length).toBeGreaterThanOrEqual(2);

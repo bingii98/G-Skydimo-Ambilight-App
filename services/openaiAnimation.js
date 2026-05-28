@@ -16,21 +16,14 @@ const EFFECT_CATALOG = [
   { id: "fire", label: "Fire", palette: "multi" },
   { id: "aurora", label: "Aurora", palette: "multi" },
   { id: "pulse", label: "Pulse", palette: "single" },
-  { id: "comet", label: "Comet", palette: "multi" },
   { id: "strobe", label: "Strobe", palette: "single" },
-  { id: "blend", label: "Blend", palette: "multi" },
   { id: "police", label: "Police", palette: "multi" },
-  { id: "ocean", label: "Ocean", palette: "multi" },
   { id: "heartbeat", label: "Heartbeat", palette: "single" },
   { id: "scanner", label: "Scanner", palette: "single" },
   { id: "meteor", label: "Meteor", palette: "multi" },
   { id: "lightning", label: "Lightning", palette: "multi" },
-  { id: "lava", label: "Lava", palette: "multi" },
-  { id: "neon", label: "Neon", palette: "multi" },
-  { id: "twinkle", label: "Twinkle", palette: "multi" },
   { id: "spectrum", label: "Spectrum", palette: "multi" },
   { id: "fade", label: "Fade", palette: "multi" },
-  { id: "candle", label: "Candle", palette: "single" },
 ];
 
 function buildPaletteBlendPrompt({
@@ -131,7 +124,7 @@ function buildSetupPrompt({ baseColor, currentEffectId, mood }) {
     currentEffectId ? `Current effect (may change): ${currentEffectId}.` : "No effect selected yet.",
     `Available animationId values: ${catalog}.`,
     "Return JSON:",
-    '{"animationId":"ocean","speed":45,"intensity":55,"stops":[{"color":"#003366","position":0},{"color":"#00AACC","position":1}]}',
+    '{"animationId":"aurora","speed":45,"intensity":55,"stops":[{"color":"#003366","position":0},{"color":"#00AACC","position":1}]}',
     "speed and intensity are integers 1–100.",
     "Use 2 stops for single-color effects, 3–5 for multi-color effects.",
   ].join(" ");

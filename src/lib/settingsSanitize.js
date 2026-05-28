@@ -1,7 +1,8 @@
 import { ensureHex } from "./colorUtils";
 import { buildAnimationColorPatch, normalizeAnimationColorsById } from "./animationColors";
-import { normalizeGradientStops, resolveGradientStops } from "./gradientStops";
+import { migrateAnimationId } from "./animationCatalog";
 import { isValidAnimationId } from "./animations";
+import { normalizeGradientStops, resolveGradientStops } from "./gradientStops";
 import {
   normalizeStripCounts,
   normalizeStripDirection,
@@ -48,10 +49,6 @@ export function sanitizeSettings(settings, defaults = {}) {
     next.zoneRotation = [0, 90, 180, 270].includes(Number(next.zoneRotation))
       ? Number(next.zoneRotation)
       : 0;
-    next.orientationConfirmed = Boolean(next.orientationConfirmed);
-
-    next.stripOrigin = normalizeStripOrigin(next.stripOrigin);
-    next.stripDirection = normalizeStripDirection(next.stripDirection);
 
     if (next.stripCounts && typeof next.stripCounts === "object") {
       const counts = {};
@@ -62,6 +59,18 @@ export function sanitizeSettings(settings, defaults = {}) {
       next.stripCounts = counts;
     } else {
       next.stripCounts = null;
+    }
+
+    next.stripOrigin = normalizeStripOrigin(next.stripOrigin);
+    next.stripDirection = normalizeStripDirection(next.stripDirection);
+
+    next.orientationConfirmed = Boolean(next.orientationConfirmed);
+    if (
+      !next.orientationConfirmed &&
+      next.stripCounts &&
+      STRIP_SIDES.some((side) => (Number(next.stripCounts[side]) || 0) > 0)
+    ) {
+      next.orientationConfirmed = true;
     }
 
     if (Array.isArray(next.ledColors)) {
@@ -129,8 +138,18 @@ export function sanitizeSettings(settings, defaults = {}) {
 
     next.animationColorsById = normalizeAnimationColorsById(next.animationColorsById, fallbackHex);
     next.animationColorsById = Object.fromEntries(
-      Object.entries(next.animationColorsById).filter(([animationId]) => isValidAnimationId(animationId))
+      Object.entries(next.animationColorsById).flatMap(([animationId, entry]) => {
+        const migratedId = migrateAnimationId(animationId);
+        if (!isValidAnimationId(migratedId)) {
+          return [];
+        }
+        return [[migratedId, entry]];
+      })
     );
+
+    if (next.animationId != null) {
+      next.animationId = migrateAnimationId(next.animationId);
+    }
 
     if (
       next.animationId &&

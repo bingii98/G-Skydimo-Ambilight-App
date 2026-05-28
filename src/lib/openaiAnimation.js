@@ -6,6 +6,7 @@ import {
   resolveAnimationColorStops,
 } from "./animationColors";
 import { getAnimationColorControls, getAnimationConfig, isValidAnimationId } from "./animations";
+import { migrateAnimationId } from "./animationCatalog";
 import {
   AI_GRADIENT_MODES,
   getGradientAnchorPair,
@@ -79,8 +80,9 @@ export function parseAnimationPaletteSuggestion(
 }
 
 export function parseAnimationSetupSuggestion(payload, fallbackHex = "#FFD700") {
-  const animationId =
-    typeof payload?.animationId === "string" ? payload.animationId.trim().toLowerCase() : "";
+  const animationId = migrateAnimationId(
+    typeof payload?.animationId === "string" ? payload.animationId.trim().toLowerCase() : ""
+  );
 
   if (!isValidAnimationId(animationId)) {
     throw new Error("AI returned an invalid animation effect");

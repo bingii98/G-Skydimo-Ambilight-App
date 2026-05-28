@@ -1,7 +1,18 @@
 import { Drawer, ScrollArea } from "@mantine/core";
-import { ConnectionPanel, SettingsPanel } from "./SidebarPanels";
+import { ConnectionSettingsSection, SettingsPanel } from "./SidebarPanels";
 
-export function SettingsDrawer({ opened, onClose, settings, onChange }) {
+export function SettingsDrawer({
+  opened,
+  onClose,
+  settings,
+  onChange,
+  state,
+  selectedPort,
+  onSelectPort,
+  onConnect,
+  onSyncOptions,
+  portFilter = "",
+}) {
   return (
     <Drawer
       opened={opened}
@@ -13,7 +24,16 @@ export function SettingsDrawer({ opened, onClose, settings, onChange }) {
       overlayProps={{ backgroundOpacity: 0.45, blur: 4 }}
     >
       <ScrollArea h="calc(100vh - 80px)" offsetScrollbars p="md">
-        <SettingsPanel settings={settings} onChange={onChange} />
+        <SettingsPanel
+          settings={settings}
+          onChange={onChange}
+          state={state}
+          selectedPort={selectedPort}
+          onSelectPort={onSelectPort}
+          onConnect={onConnect}
+          onSyncOptions={onSyncOptions}
+          portFilter={portFilter}
+        />
       </ScrollArea>
     </Drawer>
   );
@@ -23,16 +43,13 @@ export function ConnectionDrawer({
   opened,
   onClose,
   state,
-  settings,
   selectedPort,
   onSelectPort,
-  onScan,
   onConnect,
-  onToggleConnection,
-  onSettingsChange,
   onSyncOptions,
   scanning,
   connecting,
+  portFilter = "",
 }) {
   return (
     <Drawer
@@ -45,20 +62,13 @@ export function ConnectionDrawer({
       overlayProps={{ backgroundOpacity: 0.45, blur: 4 }}
     >
       <ScrollArea h="calc(100vh - 80px)" offsetScrollbars p="md">
-        <ConnectionPanel
+        <ConnectionSettingsSection
           state={state}
-          settings={settings}
           selectedPort={selectedPort}
           onSelectPort={onSelectPort}
-          onScan={onScan}
-          onConnect={(port) => {
-            onConnect(port);
-          }}
-          onToggleConnection={onToggleConnection}
-          onSettingsChange={onSettingsChange}
+          onConnect={onConnect}
           onSyncOptions={onSyncOptions}
-          scanning={scanning}
-          connecting={connecting}
+          portFilter={portFilter}
         />
       </ScrollArea>
     </Drawer>

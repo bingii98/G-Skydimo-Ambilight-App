@@ -1,4 +1,5 @@
 import { ensureHex, normalizeHex } from "./colorUtils";
+import { migrateAnimationId } from "./animationCatalog";
 import {
   clampGradientStopPosition,
   createGradientStopId,
@@ -42,21 +43,14 @@ const DEFAULT_ANIMATION_COLOR_STOPS = {
   fire: paletteStops("#FF2200", "#FF8800", "#FFDD00"),
   aurora: paletteStops("#00FF88", "#0088FF", "#8800FF"),
   pulse: paletteStops("#FF0066"),
-  comet: paletteStops("#FFFFFF", "#4488FF", "#001133"),
   strobe: paletteStops("#FFFFFF"),
-  blend: paletteStops("#FFD700", "#FF0066"),
   police: paletteStops("#FF0000", "#0000FF"),
-  ocean: paletteStops("#003366", "#0066AA", "#00AACC"),
   heartbeat: paletteStops("#FF2244"),
   scanner: paletteStops("#FF0044"),
   meteor: paletteStops("#FFFFFF", "#88CCFF", "#001133"),
   lightning: paletteStops("#AADDFF", "#FFFFFF", "#4488FF"),
-  lava: paletteStops("#FF3300", "#FF8800", "#FFCC00"),
-  neon: paletteStops("#FF00AA", "#00FFCC", "#AAFF00"),
-  twinkle: paletteStops("#FFFFCC", "#FFD700", "#FFFFFF"),
   spectrum: paletteStops("#FF0000", "#00FF00", "#0000FF", "#FF00FF"),
   fade: paletteStops("#6600FF", "#FF0066", "#00CCFF"),
-  candle: paletteStops("#FF9933"),
 };
 
 export function defaultAnimationColorStops(hex = "#FFD700") {
@@ -273,20 +267,21 @@ export function buildAnimationSwitchPatch(settings, nextAnimationId) {
     return { animationId: null };
   }
 
+  const animationId = migrateAnimationId(nextAnimationId);
   const map = persistCurrentAnimationColors(settings);
-  const stored = map[nextAnimationId];
+  const stored = map[animationId];
   const stops = stored?.animationColorStops
     ? normalizeAnimationColorStops(stored.animationColorStops, settings?.hex)
-    : defaultAnimationColorStopsForId(nextAnimationId, settings?.hex);
+    : defaultAnimationColorStopsForId(animationId, settings?.hex);
   const activeId = stored?.animationActiveColorStopId || stops[0]?.id || null;
   const colorPatch = syncAnimationHexFields(stops, activeId);
 
   return {
-    animationId: nextAnimationId,
+    animationId,
     ...colorPatch,
     animationColorsById: {
       ...map,
-      [nextAnimationId]: {
+      [animationId]: {
         animationColorStops: colorPatch.animationColorStops,
         animationActiveColorStopId: colorPatch.animationActiveColorStopId,
       },

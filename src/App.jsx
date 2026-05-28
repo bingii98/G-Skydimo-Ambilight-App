@@ -12,7 +12,6 @@ import {
 import { ColorControls } from "./components/ColorStudio";
 import { MiddlePanel } from "./components/MiddlePanel";
 import { DiscordTitleBar } from "./components/DiscordTitleBar";
-import { StudioHeader } from "./components/StudioHeader";
 import { StatusBanner } from "./components/StatusBanner";
 import { useSkydimo } from "./hooks/useSkydimo";
 import { useSettings } from "./hooks/useSettings";
@@ -98,7 +97,7 @@ export default function App() {
   const playbackPausedRef = useRef(false);
   const animSendingRef = useRef(false);
   const animationStartRef = useRef(0);
-  const animationRafRef = useRef(null);
+  const animationTimerRef = useRef(null);
   const screenRafRef = useRef(null);
   const screenColorsRef = useRef(null);
   const screenPlanRef = useRef(null);
@@ -604,9 +603,9 @@ export default function App() {
 
   useEffect(() => {
     if (!animationActive) {
-      if (animationRafRef.current) {
-        cancelAnimationFrame(animationRafRef.current);
-        animationRafRef.current = null;
+      if (animationTimerRef.current) {
+        clearInterval(animationTimerRef.current);
+        animationTimerRef.current = null;
       }
       if (
         settings.colorMode !== COLOR_MODES.ANIMATION &&
@@ -621,21 +620,13 @@ export default function App() {
     }
 
     animationStartRef.current = performance.now();
-    let lastTick = 0;
 
-    const tick = (now) => {
+    const tick = () => {
       if (playbackPausedRef.current || animSendingRef.current) {
-        animationRafRef.current = requestAnimationFrame(tick);
         return;
       }
 
-      if (now - lastTick < ANIMATION_TICK_MS) {
-        animationRafRef.current = requestAnimationFrame(tick);
-        return;
-      }
-
-      lastTick = now;
-      const elapsed = now - animationStartRef.current;
+      const elapsed = performance.now() - animationStartRef.current;
       const pixels = buildAnimationPixels({
         animationId: settings.animationId,
         ledCount,
@@ -657,16 +648,15 @@ export default function App() {
         .finally(() => {
           animSendingRef.current = false;
         });
-
-      animationRafRef.current = requestAnimationFrame(tick);
     };
 
-    animationRafRef.current = requestAnimationFrame(tick);
+    tick();
+    animationTimerRef.current = setInterval(tick, ANIMATION_TICK_MS);
 
     return () => {
-      if (animationRafRef.current) {
-        cancelAnimationFrame(animationRafRef.current);
-        animationRafRef.current = null;
+      if (animationTimerRef.current) {
+        clearInterval(animationTimerRef.current);
+        animationTimerRef.current = null;
       }
     };
   }, [
@@ -947,7 +937,7 @@ export default function App() {
       ledOn={ledOn}
       sending={sending}
       onQuickConnect={() => handleConnect(selectedPort)}
-      hideConnectOverlay={activeNav === "devices"}
+      hideConnectOverlay={activeNav === "settings"}
       screenCaptureReady={screenCaptureReady}
       screenCaptureError={screenCaptureError}
       screenSources={screenSources}
@@ -1025,14 +1015,6 @@ export default function App() {
               />
 
               <section className="studio-stage">
-                <StudioHeader
-                  state={state}
-                  ledCount={ledCount}
-                  deviceModel={deviceModel}
-                  connected={connected}
-                  ledOn={ledOn}
-                />
-
                 <div className="studio-stage__body">{colorControls}</div>
               </section>
             </div>

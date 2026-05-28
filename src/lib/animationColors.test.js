@@ -100,10 +100,11 @@ describe("animationColors", () => {
 
   it("seeds defaults when an animation has no saved palette", () => {
     const patch = buildAnimationSwitchPatch({ hex: "#FFFFFF", animationId: "rainbow" }, "ocean");
-    const stops = resolveAnimationColorStops(patch, "#FFFFFF", "ocean");
-    const defaults = defaultAnimationColorStopsForId("ocean", "#FFFFFF");
+    const stops = resolveAnimationColorStops(patch, "#FFFFFF", "aurora");
+    const defaults = defaultAnimationColorStopsForId("aurora", "#FFFFFF");
 
+    expect(patch.animationId).toBe("aurora");
     expect(stops[0].color).toBe(defaults[0].color);
-    expect(patch.animationColorsById?.ocean).toBeTruthy();
+    expect(patch.animationColorsById?.aurora).toBeTruthy();
   });
 });

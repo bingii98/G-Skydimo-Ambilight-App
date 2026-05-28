@@ -45,11 +45,13 @@ function getDeviceSerial(deviceModel, deviceId) {
 function PortItem({ port, selected, connectedPath, recommendedPath, onSelect, onConnect }) {
   const isRecommended = port.path === recommendedPath && port.path !== connectedPath;
   const isConnected = port.path === connectedPath;
+  const isSelected = selected && !isConnected;
   const className = [
     "list-row",
-    selected ? "list-row--active" : "",
-    isConnected ? "list-row--connected" : "",
-    isRecommended ? "list-row--recommended" : "",
+    "port-row",
+    isConnected ? "port-row--connected" : "",
+    isSelected ? "port-row--selected" : "",
+    isRecommended ? "port-row--recommended" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -60,12 +62,15 @@ function PortItem({ port, selected, connectedPath, recommendedPath, onSelect, on
       className={className}
       onClick={() => onSelect(port.path)}
       onDoubleClick={() => onConnect(port.path)}
+      aria-pressed={selected}
     >
-      <span className="list-row__avatar">{port.path.replace("COM", "")}</span>
+      <span className={`port-row__avatar ${isConnected ? "port-row__avatar--connected" : isSelected ? "port-row__avatar--selected" : ""}`}>
+        {port.path.replace("COM", "")}
+      </span>
       <span className="list-row__body">
         <span className="list-row__title">
           {port.path}
-          {isRecommended ? " · Suggested" : ""}
+          {isConnected ? " · Connected" : isRecommended ? " · Suggested" : ""}
         </span>
         <span className="list-row__sub">
           {port.label}
@@ -73,31 +78,35 @@ function PortItem({ port, selected, connectedPath, recommendedPath, onSelect, on
         </span>
       </span>
       <span className="list-row__meta">
-        {isConnected && <span className="list-row__dot list-row__dot--online" />}
-        <Badge
-          size="xs"
-          variant="light"
-          color={port.status === "available" ? "teal" : port.status === "busy" ? "yellow" : "gray"}
-        >
-          {STATUS_LABELS[port.status] || port.status}
-        </Badge>
+        {isConnected ? (
+          <Badge size="xs" variant="dot" color="teal">
+            Live
+          </Badge>
+        ) : isSelected ? (
+          <Badge size="xs" variant="light" color="teal">
+            Selected
+          </Badge>
+        ) : (
+          <Badge
+            size="xs"
+            variant="light"
+            color={port.status === "available" ? "gray" : port.status === "busy" ? "yellow" : "gray"}
+          >
+            {STATUS_LABELS[port.status] || port.status}
+          </Badge>
+        )}
       </span>
     </button>
   );
 }
 
-export function ConnectionPanel({
+export function DevicePanel({
   state,
+  selectedPort,
   settings,
   ledCount,
   deviceModel,
-  selectedPort,
-  onSelectPort,
-  onScan,
-  onConnect,
-  onToggleConnection,
   onSettingsChange,
-  onSyncOptions,
   onTestZones,
   onFlashZone,
   onRunCalibrationChase,
@@ -106,16 +115,164 @@ export function ConnectionPanel({
   onRestoreAfterCalibrate,
   ledOn = true,
   onToggleLedPower,
-  scanning,
-  connecting,
-  portFilter = "",
 }) {
   const connected = state?.connected;
   const zoneRotation = settings.zoneRotation ?? 0;
   const ledSource = resolveLedSource(state?.deviceId);
   const deviceTitle = getDeviceTitle(deviceModel, state?.deviceId);
   const deviceSerial = getDeviceSerial(deviceModel, state?.deviceId);
+  const portLabel = connected ? state?.port : selectedPort;
 
+  if (!connected) {
+    return (
+      <Stack gap="sm" className="device-panel">
+        <Box className="soft-info-card device-card device-card--idle">
+          <div className="device-card__accent" aria-hidden />
+          <div className="device-card__hero">
+            <div className="device-card__avatar device-card__avatar--idle">
+              {portLabel ? portLabel.replace("COM", "") : <IconPlugConnectedX size={16} stroke={1.75} aria-hidden />}
+            </div>
+            <div className="device-card__identity">
+              <Text fw={700} size="sm" className="device-card__title">
+                {portLabel ? `${portLabel} selected` : "No device connected"}
+              </Text>
+              <Text size="xs" c="dimmed" className="device-card__serial">
+                {portLabel
+                  ? "Connect in Settings → Connection"
+                  : "Open Settings → Connection to scan and connect"}
+              </Text>
+            </div>
+            {portLabel ? (
+              <Badge variant="light" color="gray" size="sm" radius="xl" className="device-card__badge">
+                Pending
+              </Badge>
+            ) : null}
+          </div>
+        </Box>
+      </Stack>
+    );
+  }
+
+  return (
+    <Stack gap="sm" className="device-panel">
+      <Box className={`soft-info-card device-card device-card--connected ${ledOn ? "device-card--online" : "device-card--off"}`}>
+        <div className="device-card__accent" aria-hidden />
+
+        <div className="device-card__hero">
+          <div className="device-card__avatar">{state.port?.replace("COM", "") || "●"}</div>
+          <div className="device-card__identity">
+            <Tooltip label={state.deviceId || deviceTitle} openDelay={400} disabled={!state.deviceId}>
+              <Text fw={700} size="sm" className="device-card__title" truncate>
+                {deviceTitle}
+              </Text>
+            </Tooltip>
+            <Text size="xs" c="dimmed" className="device-card__serial" truncate>
+              {[state.port, deviceModel, `${ledCount} LEDs`].filter(Boolean).join(" · ")}
+            </Text>
+            {deviceSerial ? (
+              <Text size="xs" c="dimmed" ff="monospace" className="device-card__serial" truncate>
+                {deviceSerial}
+              </Text>
+            ) : null}
+            <Group gap={6} wrap="nowrap" className="device-card__badges">
+              <Badge variant="dot" color={ledOn ? "teal" : "gray"} size="sm" radius="xl">
+                {ledOn ? "Online" : "Off"}
+              </Badge>
+              <Badge variant="light" color="teal" size="sm" radius="xl">
+                Live
+              </Badge>
+            </Group>
+          </div>
+
+          <Tooltip label={ledOn ? "Turn LEDs off" : "Turn LEDs on"} openDelay={300}>
+            <div className={`device-card__power ${ledOn ? "device-card__power--on" : ""}`}>
+              <IconBulb size={15} stroke={1.75} aria-hidden />
+              <Switch
+                checked={ledOn}
+                onChange={(event) => onToggleLedPower(event.currentTarget.checked)}
+                color="teal"
+                size="sm"
+                aria-label="Toggle LED power"
+              />
+            </div>
+          </Tooltip>
+        </div>
+
+        <div className="device-card__stats">
+          <div className="device-card__stat">
+            <span className="device-card__stat-icon" aria-hidden>
+              <IconRouter size={14} stroke={1.75} />
+            </span>
+            <span className="device-card__stat-body">
+              <span className="device-card__stat-label">Port</span>
+              <Tooltip label={state.port} openDelay={400} disabled={!state.port}>
+                <span className="device-card__stat-value">{state.port}</span>
+              </Tooltip>
+            </span>
+          </div>
+          <div className="device-card__stat">
+            <span className="device-card__stat-icon" aria-hidden>
+              <IconBulb size={14} stroke={1.75} />
+            </span>
+            <span className="device-card__stat-body">
+              <span className="device-card__stat-label">LEDs</span>
+              <span className="device-card__stat-value">{ledCount}</span>
+            </span>
+          </div>
+          <div
+            className={`device-card__stat ${ledSource.matched ? "device-card__stat--matched" : "device-card__stat--default"}`}
+          >
+            <span className="device-card__stat-icon" aria-hidden>
+              <IconCpu size={14} stroke={1.75} />
+            </span>
+            <span className="device-card__stat-body">
+              <span className="device-card__stat-label">Profile</span>
+              <Tooltip
+                label={ledSource.matched ? ledSource.model || "Matched" : "Default"}
+                openDelay={400}
+              >
+                <span className="device-card__stat-value">
+                  {ledSource.matched ? ledSource.model || "Matched" : "Default"}
+                </span>
+              </Tooltip>
+            </span>
+          </div>
+        </div>
+
+        {!ledSource.matched ? (
+          <Text size="xs" c="dimmed" lh={1.45} className="device-card__notice">
+            {ledSource.detail}
+          </Text>
+        ) : null}
+
+        <OrientationConfig
+          settings={settings}
+          ledCount={ledCount}
+          deviceModel={deviceModel}
+          zoneRotation={zoneRotation}
+          connected={connected}
+          onSettingsChange={onSettingsChange}
+          onTestZones={onTestZones}
+          onFlashZone={onFlashZone}
+          onRunCalibrationChase={onRunCalibrationChase}
+          onAbortCalibrationPlayback={onAbortCalibrationPlayback}
+          onCalibrationLock={onCalibrationLock}
+          onRestoreAfterCalibrate={onRestoreAfterCalibrate}
+        />
+      </Box>
+    </Stack>
+  );
+}
+
+export function ConnectionSettingsSection({
+  state,
+  selectedPort,
+  onSelectPort,
+  onConnect,
+  onSyncOptions,
+  scanning,
+  portFilter = "",
+}) {
   const ports = (state?.ports || [])
     .filter((port) => {
       if (!portFilter.trim()) return true;
@@ -134,103 +291,7 @@ export function ConnectionPanel({
     });
 
   return (
-    <Stack gap="sm" className="connection-panel">
-      {connected && (
-        <Box className={`soft-info-card device-card ${ledOn ? "device-card--online" : "device-card--off"}`}>
-          <div className="device-card__accent" aria-hidden />
-
-          <div className="device-card__hero">
-            <div className="device-card__identity">
-              <Tooltip label={state.deviceId || deviceTitle} openDelay={400} disabled={!state.deviceId}>
-                <Text fw={700} size="sm" className="device-card__title" truncate>
-                  {deviceTitle}
-                </Text>
-              </Tooltip>
-              {deviceSerial ? (
-                <Text size="xs" c="dimmed" ff="monospace" className="device-card__serial" truncate>
-                  {deviceSerial}
-                </Text>
-              ) : null}
-            </div>
-
-            <Tooltip label={ledOn ? "Turn LEDs off" : "Turn LEDs on"} openDelay={300}>
-              <div className={`device-card__power ${ledOn ? "device-card__power--on" : ""}`}>
-                <IconBulb size={15} stroke={1.75} aria-hidden />
-                <Switch
-                  checked={ledOn}
-                  onChange={(event) => onToggleLedPower(event.currentTarget.checked)}
-                  color="teal"
-                  size="sm"
-                  aria-label="Toggle LED power"
-                />
-              </div>
-            </Tooltip>
-          </div>
-
-          <div className="device-card__stats">
-            <div className="device-card__stat">
-              <span className="device-card__stat-icon" aria-hidden>
-                <IconRouter size={14} stroke={1.75} />
-              </span>
-              <span className="device-card__stat-body">
-                <span className="device-card__stat-label">Port</span>
-                <Tooltip label={state.port} openDelay={400} disabled={!state.port}>
-                  <span className="device-card__stat-value">{state.port}</span>
-                </Tooltip>
-              </span>
-            </div>
-            <div className="device-card__stat">
-              <span className="device-card__stat-icon" aria-hidden>
-                <IconBulb size={14} stroke={1.75} />
-              </span>
-              <span className="device-card__stat-body">
-                <span className="device-card__stat-label">LEDs</span>
-                <span className="device-card__stat-value">{ledCount}</span>
-              </span>
-            </div>
-            <div
-              className={`device-card__stat ${ledSource.matched ? "device-card__stat--matched" : "device-card__stat--default"}`}
-            >
-              <span className="device-card__stat-icon" aria-hidden>
-                <IconCpu size={14} stroke={1.75} />
-              </span>
-              <span className="device-card__stat-body">
-                <span className="device-card__stat-label">Profile</span>
-                <Tooltip
-                  label={ledSource.matched ? ledSource.model || "Matched" : "Default"}
-                  openDelay={400}
-                >
-                  <span className="device-card__stat-value">
-                    {ledSource.matched ? ledSource.model || "Matched" : "Default"}
-                  </span>
-                </Tooltip>
-              </span>
-            </div>
-          </div>
-
-          {!ledSource.matched ? (
-            <Text size="xs" c="dimmed" lh={1.45} className="device-card__notice">
-              {ledSource.detail}
-            </Text>
-          ) : null}
-
-          <OrientationConfig
-            settings={settings}
-            ledCount={ledCount}
-            deviceModel={deviceModel}
-            zoneRotation={zoneRotation}
-            connected={connected}
-            onSettingsChange={onSettingsChange}
-            onTestZones={onTestZones}
-            onFlashZone={onFlashZone}
-            onRunCalibrationChase={onRunCalibrationChase}
-            onAbortCalibrationPlayback={onAbortCalibrationPlayback}
-            onCalibrationLock={onCalibrationLock}
-            onRestoreAfterCalibrate={onRestoreAfterCalibrate}
-          />
-        </Box>
-      )}
-
+    <Stack gap="sm" className="connection-settings">
       <Box className="connection-options">
         <SectionLabel icon={IconPlugConnected}>Connection</SectionLabel>
         <Group gap="lg" grow preventGrowOverflow={false}>
@@ -263,27 +324,37 @@ export function ConnectionPanel({
       </SectionLabel>
 
       <div className="middle-list">
-          {!ports.length ? (
-            <Box className="soft-empty" ta="center">
-              <IconRouter size={28} stroke={1.5} style={{ opacity: 0.35 }} />
-              <Text size="sm" c="dimmed" mt="sm">
-                {portFilter ? "No matching ports" : "No COM ports found"}
-              </Text>
-            </Box>
-          ) : (
-            ports.map((port) => (
-              <PortItem
-                key={port.path}
-                port={port}
-                selected={selectedPort === port.path}
-                connectedPath={state.port}
-                recommendedPath={state.recommendedPort?.path}
-                onSelect={onSelectPort}
-                onConnect={onConnect}
-              />
-            ))
-          )}
-        </div>
+        {!ports.length ? (
+          <Box className="soft-empty" ta="center">
+            <IconRouter size={28} stroke={1.5} style={{ opacity: 0.35 }} />
+            <Text size="sm" c="dimmed" mt="sm">
+              {portFilter ? "No matching ports" : "No COM ports found"}
+            </Text>
+          </Box>
+        ) : (
+          ports.map((port) => (
+            <PortItem
+              key={port.path}
+              port={port}
+              selected={selectedPort === port.path}
+              connectedPath={state.port}
+              recommendedPath={state.recommendedPort?.path}
+              onSelect={onSelectPort}
+              onConnect={onConnect}
+            />
+          ))
+        )}
+      </div>
+    </Stack>
+  );
+}
+
+/** Legacy alias — prefer DevicePanel + ConnectionSettingsSection */
+export function ConnectionPanel(props) {
+  return (
+    <Stack gap="sm" className="connection-panel">
+      <DevicePanel {...props} />
+      <ConnectionSettingsSection {...props} />
     </Stack>
   );
 }
@@ -323,9 +394,28 @@ export function DevicePanelActions({
   );
 }
 
-export function SettingsPanel({ settings, onChange, startupError = null }) {
+export function SettingsPanel({
+  settings,
+  onChange,
+  startupError = null,
+  state,
+  selectedPort,
+  onSelectPort,
+  onConnect,
+  onSyncOptions,
+  portFilter = "",
+}) {
   return (
     <Stack gap="lg">
+      <ConnectionSettingsSection
+        state={state}
+        selectedPort={selectedPort}
+        onSelectPort={onSelectPort}
+        onConnect={onConnect}
+        onSyncOptions={onSyncOptions}
+        portFilter={portFilter}
+      />
+
       <Box>
         <SectionLabel icon={IconSparkles}>AI (gradient & animation)</SectionLabel>
         <Stack gap="sm">

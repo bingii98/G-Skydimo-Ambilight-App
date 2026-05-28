@@ -39,4 +39,42 @@ describe("sanitizeSettings", () => {
 
     expect(result.hex).toBe("#00CCAA");
   });
+
+  it("infers orientationConfirmed from saved strip layout", () => {
+    const result = sanitizeSettings({
+      orientationConfirmed: false,
+      stripCounts: { top: 24, right: 12, bottom: 24, left: 12 },
+    });
+
+    expect(result.orientationConfirmed).toBe(true);
+  });
+
+  it("migrates deprecated animation ids and palettes", () => {
+    const result = sanitizeSettings({
+      colorMode: "animation",
+      animationId: "ocean",
+      animationColorsById: {
+        ocean: {
+          animationColorStops: [
+            { id: "a", position: 0, color: "#003366" },
+            { id: "b", position: 1, color: "#00AACC" },
+          ],
+          animationActiveColorStopId: "a",
+        },
+        blend: {
+          animationColorStops: [
+            { id: "c", position: 0, color: "#FFD700" },
+            { id: "d", position: 1, color: "#FF0066" },
+          ],
+          animationActiveColorStopId: "c",
+        },
+      },
+    });
+
+    expect(result.animationId).toBe("aurora");
+    expect(result.animationColorsById?.ocean).toBeUndefined();
+    expect(result.animationColorsById?.blend).toBeUndefined();
+    expect(result.animationColorsById?.aurora?.animationColorStops?.[0]?.color).toBe("#003366");
+    expect(result.animationColorsById?.rainbow?.animationColorStops?.[0]?.color).toBe("#FFD700");
+  });
 });

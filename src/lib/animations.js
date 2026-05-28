@@ -8,6 +8,7 @@ import {
   ANIMATION_PALETTE,
 } from "./animationColors";
 import { buildAnimationPerimeterPhases } from "./animationSpatial";
+import { migrateAnimationId } from "./animationCatalog";
 import { ensureHex, interpolateHex, rgbToHex, scaledRgb } from "./colorUtils";
 import { COLOR_MODES } from "./ledLayout";
 
@@ -24,163 +25,165 @@ export const ANIMATION_IDS = {
   FIRE: "fire",
   AURORA: "aurora",
   PULSE: "pulse",
-  COMET: "comet",
   STROBE: "strobe",
-  BLEND: "blend",
   POLICE: "police",
-  OCEAN: "ocean",
   HEARTBEAT: "heartbeat",
   SCANNER: "scanner",
   METEOR: "meteor",
   LIGHTNING: "lightning",
-  LAVA: "lava",
-  NEON: "neon",
-  TWINKLE: "twinkle",
   SPECTRUM: "spectrum",
   FADE: "fade",
-  CANDLE: "candle",
 };
+
+export const ANIMATION_GROUP_IDS = {
+  ALL: "all",
+  FLOW: "flow",
+  MOTION: "motion",
+  GLOW: "glow",
+  FLASH: "flash",
+};
+
+export const ANIMATION_GROUP_OPTIONS = [
+  { id: ANIMATION_GROUP_IDS.ALL, label: "All" },
+  { id: ANIMATION_GROUP_IDS.FLOW, label: "Flow" },
+  { id: ANIMATION_GROUP_IDS.MOTION, label: "Motion" },
+  { id: ANIMATION_GROUP_IDS.GLOW, label: "Glow" },
+  { id: ANIMATION_GROUP_IDS.FLASH, label: "Flash" },
+];
 
 export const ANIMATIONS = [
   {
     id: ANIMATION_IDS.RAINBOW,
     label: "Rainbow",
     hint: "Color sweep across a palette",
+    group: ANIMATION_GROUP_IDS.FLOW,
     colorPalette: ANIMATION_PALETTE.MULTI,
   },
   {
     id: ANIMATION_IDS.CHASE,
     label: "Chase",
     hint: "Bright dot travels along LEDs",
+    group: ANIMATION_GROUP_IDS.MOTION,
     colorPalette: ANIMATION_PALETTE.MULTI,
   },
   {
     id: ANIMATION_IDS.BREATHE,
     label: "Breathe",
     hint: "Pulse brightness on one color",
+    group: ANIMATION_GROUP_IDS.GLOW,
     colorPalette: ANIMATION_PALETTE.SINGLE,
   },
   {
     id: ANIMATION_IDS.WAVE,
     label: "Wave",
     hint: "Moving palette wave",
+    group: ANIMATION_GROUP_IDS.FLOW,
     colorPalette: ANIMATION_PALETTE.MULTI,
   },
   {
     id: ANIMATION_IDS.SPARKLE,
     label: "Sparkle",
     hint: "Random twinkles from palette colors",
+    group: ANIMATION_GROUP_IDS.GLOW,
     colorPalette: ANIMATION_PALETTE.MULTI,
   },
   {
     id: ANIMATION_IDS.FIRE,
     label: "Fire",
     hint: "Warm flicker through palette",
+    group: ANIMATION_GROUP_IDS.FLASH,
     colorPalette: ANIMATION_PALETTE.MULTI,
   },
   {
     id: ANIMATION_IDS.AURORA,
     label: "Aurora",
     hint: "Flowing bands through palette",
+    group: ANIMATION_GROUP_IDS.FLOW,
     colorPalette: ANIMATION_PALETTE.MULTI,
   },
   {
     id: ANIMATION_IDS.PULSE,
     label: "Pulse",
     hint: "Ripple outward from strip center",
+    group: ANIMATION_GROUP_IDS.GLOW,
     colorPalette: ANIMATION_PALETTE.SINGLE,
-  },
-  {
-    id: ANIMATION_IDS.COMET,
-    label: "Comet",
-    hint: "Glowing head with a fading tail",
-    colorPalette: ANIMATION_PALETTE.MULTI,
   },
   {
     id: ANIMATION_IDS.STROBE,
     label: "Strobe",
     hint: "Fast flash on one color",
+    group: ANIMATION_GROUP_IDS.FLASH,
     colorPalette: ANIMATION_PALETTE.SINGLE,
-  },
-  {
-    id: ANIMATION_IDS.BLEND,
-    label: "Blend",
-    hint: "Sweep through palette colors",
-    colorPalette: ANIMATION_PALETTE.MULTI,
   },
   {
     id: ANIMATION_IDS.POLICE,
     label: "Police",
     hint: "Alternating palette blocks",
-    colorPalette: ANIMATION_PALETTE.MULTI,
-  },
-  {
-    id: ANIMATION_IDS.OCEAN,
-    label: "Ocean",
-    hint: "Cool rolling palette waves",
+    group: ANIMATION_GROUP_IDS.FLASH,
     colorPalette: ANIMATION_PALETTE.MULTI,
   },
   {
     id: ANIMATION_IDS.HEARTBEAT,
     label: "Heartbeat",
     hint: "Double-beat pulse on one color",
+    group: ANIMATION_GROUP_IDS.GLOW,
     colorPalette: ANIMATION_PALETTE.SINGLE,
   },
   {
     id: ANIMATION_IDS.SCANNER,
     label: "Scanner",
     hint: "Bright segment scans back and forth",
+    group: ANIMATION_GROUP_IDS.MOTION,
     colorPalette: ANIMATION_PALETTE.SINGLE,
   },
   {
     id: ANIMATION_IDS.METEOR,
     label: "Meteor",
     hint: "Multiple glowing trails around the strip",
+    group: ANIMATION_GROUP_IDS.MOTION,
     colorPalette: ANIMATION_PALETTE.MULTI,
   },
   {
     id: ANIMATION_IDS.LIGHTNING,
     label: "Lightning",
     hint: "Random bright flashes from palette colors",
-    colorPalette: ANIMATION_PALETTE.MULTI,
-  },
-  {
-    id: ANIMATION_IDS.LAVA,
-    label: "Lava",
-    hint: "Slow bubbling heat through palette",
-    colorPalette: ANIMATION_PALETTE.MULTI,
-  },
-  {
-    id: ANIMATION_IDS.NEON,
-    label: "Neon",
-    hint: "Flickering neon bands from palette",
-    colorPalette: ANIMATION_PALETTE.MULTI,
-  },
-  {
-    id: ANIMATION_IDS.TWINKLE,
-    label: "Twinkle",
-    hint: "Soft pulsing stars from palette",
+    group: ANIMATION_GROUP_IDS.FLASH,
     colorPalette: ANIMATION_PALETTE.MULTI,
   },
   {
     id: ANIMATION_IDS.SPECTRUM,
     label: "Spectrum",
     hint: "Hard color bands cycling around strip",
+    group: ANIMATION_GROUP_IDS.FLOW,
     colorPalette: ANIMATION_PALETTE.MULTI,
   },
   {
     id: ANIMATION_IDS.FADE,
     label: "Fade",
     hint: "Whole strip crossfades palette colors",
+    group: ANIMATION_GROUP_IDS.FLOW,
     colorPalette: ANIMATION_PALETTE.MULTI,
   },
-  {
-    id: ANIMATION_IDS.CANDLE,
-    label: "Candle",
-    hint: "Warm random flicker on one color",
-    colorPalette: ANIMATION_PALETTE.SINGLE,
-  },
 ];
+
+export function filterAnimations({ group = ANIMATION_GROUP_IDS.ALL, query = "" } = {}) {
+  const normalizedQuery = query.trim().toLowerCase();
+
+  return ANIMATIONS.filter((item) => {
+    if (group !== ANIMATION_GROUP_IDS.ALL && item.group !== group) {
+      return false;
+    }
+
+    if (!normalizedQuery) {
+      return true;
+    }
+
+    return (
+      item.label.toLowerCase().includes(normalizedQuery) ||
+      item.hint.toLowerCase().includes(normalizedQuery)
+    );
+  });
+}
 
 const VALID_ANIMATION_IDS = new Set(ANIMATIONS.map((item) => item.id));
 
@@ -301,7 +304,8 @@ function resolvePalette(settings) {
 export function buildAnimationPixels({ animationId, ledCount, settings, timeMs, deviceModel = null }) {
   const count = Math.max(0, Number(ledCount) || 0);
   const pixels = new Uint8Array(count * 3);
-  if (!count || !isValidAnimationId(animationId)) {
+  const resolvedId = migrateAnimationId(animationId);
+  if (!count || !isValidAnimationId(resolvedId)) {
     return pixels;
   }
 
@@ -315,7 +319,7 @@ export function buildAnimationPixels({ animationId, ledCount, settings, timeMs, 
   const perimeterPhases = buildAnimationPerimeterPhases(settings, deviceModel, count);
   const loopRate = 14 / Math.max(1, count);
 
-  switch (animationId) {
+  switch (resolvedId) {
     case ANIMATION_IDS.RAINBOW: {
       const scroll = t * (0.2 + intensity * 0.35);
       for (let i = 0; i < count; i += 1) {
@@ -406,38 +410,12 @@ export function buildAnimationPixels({ animationId, ledCount, settings, timeMs, 
       break;
     }
 
-    case ANIMATION_IDS.COMET: {
-      const tail = Math.max(3, Math.round(3 + intensity * 12));
-      const headPhase = wrapMix(t * (10 / Math.max(1, count)) * direction);
-      for (let i = 0; i < count; i += 1) {
-        const dist = animationPhaseDistance(headPhase, perimeterPhases[i], direction) * count;
-        if (dist >= tail) {
-          writePixel(pixels, i, "#000000", brightness);
-          continue;
-        }
-        const fade = 1 - dist / tail;
-        const hex = mixHex(secondary, primary, fade);
-        writePixel(pixels, i, hex, brightness * (0.15 + fade * (0.55 + intensity * 0.4)));
-      }
-      break;
-    }
-
     case ANIMATION_IDS.STROBE: {
       const phase = t * (2 + intensity * 6) * direction;
       const on = Math.sin(phase * Math.PI * 2) > (0.15 - intensity * 0.25);
       const level = on ? 1 : 0.04;
       for (let i = 0; i < count; i += 1) {
         writePixel(pixels, i, primary, brightness * level);
-      }
-      break;
-    }
-
-    case ANIMATION_IDS.BLEND: {
-      const scroll = t * (0.35 + intensity * 0.45);
-      for (let i = 0; i < count; i += 1) {
-        const ledPhase = directedPhase(perimeterPhases, i, direction);
-        const mix = 0.5 + 0.5 * Math.sin(phaseMix(ledPhase, scroll) * Math.PI * 2);
-        writePixel(pixels, i, sample(mix), brightness);
       }
       break;
     }
@@ -450,17 +428,6 @@ export function buildAnimationPixels({ animationId, ledCount, settings, timeMs, 
         const segment = Math.floor((ledPhase + t * (6 + intensity * 8)) / block);
         const color = colors[((segment % colors.length) + colors.length) % colors.length].color;
         writePixel(pixels, i, color, brightness);
-      }
-      break;
-    }
-
-    case ANIMATION_IDS.OCEAN: {
-      for (let i = 0; i < count; i += 1) {
-        const ledPhase = directedPhase(perimeterPhases, i, direction) * count;
-        const swell = Math.sin(ledPhase * 0.35 + t * (1.5 + intensity));
-        const mix = 0.5 + 0.5 * swell;
-        const lit = 0.35 + (0.18 + intensity * 0.22) * (0.5 + 0.5 * Math.sin(ledPhase * 0.22 + t * 2.4));
-        writePixel(pixels, i, sample(mix), brightness * lit);
       }
       break;
     }
@@ -535,41 +502,6 @@ export function buildAnimationPixels({ animationId, ledCount, settings, timeMs, 
       break;
     }
 
-    case ANIMATION_IDS.LAVA: {
-      for (let i = 0; i < count; i += 1) {
-        const ledPhase = directedPhase(perimeterPhases, i, direction);
-        const bubble = seededRandom(i * 7.3 + Math.floor(t * (2 + intensity)));
-        const rise = Math.sin(ledPhase * Math.PI * 2 + t * (0.8 + intensity * 0.5) + bubble * 4);
-        const heat = Math.min(1, Math.max(0, (rise + 1) * 0.35 + bubble * (0.25 + intensity * 0.3)));
-        writePixel(pixels, i, sample(heat), brightness * (0.5 + heat * 0.5));
-      }
-      break;
-    }
-
-    case ANIMATION_IDS.NEON: {
-      const bands = ordered.length > 0 ? ordered : [{ color: primary }, { color: secondary }];
-      for (let i = 0; i < count; i += 1) {
-        const ledPhase = directedPhase(perimeterPhases, i, direction);
-        const bandIndex = Math.floor(ledPhase * Math.max(2, bands.length));
-        const baseColor = bands[bandIndex % bands.length].color;
-        const flicker = 0.75 + 0.25 * seededRandom(i * 3.1 + Math.floor(t * (8 + intensity * 12)));
-        const hum = 0.5 + 0.5 * Math.sin(t * (1 + intensity) + i * 0.4);
-        writePixel(pixels, i, baseColor, brightness * flicker * hum * (0.4 + intensity * 0.45));
-      }
-      break;
-    }
-
-    case ANIMATION_IDS.TWINKLE: {
-      for (let i = 0; i < count; i += 1) {
-        const cycle = seededRandom(i * 23.1);
-        const speedMul = 0.5 + cycle * (1.5 + intensity);
-        const wave = 0.5 + 0.5 * Math.sin(t * Math.PI * 2 * speedMul + cycle * Math.PI * 2);
-        const starHex = pickAnimationPaletteColor(palette.stops, cycle);
-        writePixel(pixels, i, starHex, brightness * (0.08 + wave * wave * (0.35 + intensity * 0.45)));
-      }
-      break;
-    }
-
     case ANIMATION_IDS.SPECTRUM: {
       const bandCount = Math.max(2, Math.round(2 + intensity * 5));
       const scroll = wrapMix(t * (0.15 + intensity * 0.25) * direction);
@@ -599,16 +531,6 @@ export function buildAnimationPixels({ animationId, ledCount, settings, timeMs, 
       break;
     }
 
-    case ANIMATION_IDS.CANDLE: {
-      for (let i = 0; i < count; i += 1) {
-        const noise = seededRandom(i * 5.7 + Math.floor(t * (10 + intensity * 8)));
-        const flicker = 0.82 + noise * (0.12 + intensity * 0.15);
-        const sway = 0.5 + 0.5 * Math.sin(t * (3 + intensity * 2) + i * 0.05);
-        writePixel(pixels, i, primary, brightness * flicker * (0.85 + sway * 0.15));
-      }
-      break;
-    }
-
     default:
       break;
   }
@@ -617,10 +539,8 @@ export function buildAnimationPixels({ animationId, ledCount, settings, timeMs, 
 }
 
 export function isAnimationPlaybackActive(settings) {
-  return (
-    settings?.colorMode === COLOR_MODES.ANIMATION &&
-    isValidAnimationId(settings?.animationId)
-  );
+  const animationId = migrateAnimationId(settings?.animationId);
+  return settings?.colorMode === COLOR_MODES.ANIMATION && isValidAnimationId(animationId);
 }
 
 /** @param {Uint8Array} pixels @param {number} ledCount */

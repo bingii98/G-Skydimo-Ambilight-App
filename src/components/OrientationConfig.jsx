@@ -69,19 +69,9 @@ export function OrientationConfig({
     edgeLength: null,
   });
 
-  const orientationConfirmed = Boolean(settings?.orientationConfirmed);
   const layoutSource = getLayoutSource(settings, deviceModel, ledCount);
 
-  const resolveInitialStep = useCallback(() => {
-    if (orientationConfirmed) return STEP_DONE;
-    return STEP_DIRECTION;
-  }, [orientationConfirmed]);
-
-  const [wizardStep, setWizardStep] = useState(resolveInitialStep);
-
-  useEffect(() => {
-    setWizardStep(resolveInitialStep());
-  }, [resolveInitialStep]);
+  const [wizardStep, setWizardStep] = useState(STEP_DONE);
 
   /** Zone containing LED 1 on the wire path (before map rotation). */
   const wireZeroZone = useMemo(

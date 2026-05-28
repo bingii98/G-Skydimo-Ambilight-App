@@ -16,7 +16,9 @@ import { buildGradientTrackBackground } from "../lib/gradientStops";
 import { ensureHex, normalizeHex } from "../lib/colorUtils";
 import { ColorPickerPopover } from "./ColorPickerPopup";
 
+const NEW_STOP_ANIM_MS = 350;
 const DRAG_THRESHOLD_PX = 4;
+const TRACK_GRADIENT_DIRECTION = "90deg";
 
 function sortedStops(stops) {
   return [...stops].sort((a, b) => a.position - b.position || a.id.localeCompare(b.id));
@@ -33,6 +35,7 @@ function stopEdgeFlags(stops, stopId) {
     index,
     isFirst: index === 0,
     isLast: index === ordered.length - 1,
+    isEdge: index === 0 || index === ordered.length - 1,
   };
 }
 
@@ -53,39 +56,16 @@ function findLargestGapInsertAt(stops) {
   return insertAt;
 }
 
-function positionFromPointer(track, clientY, stopId, stops) {
+function positionFromPointer(track, clientX, stopId, stops) {
   const rect = track.getBoundingClientRect();
-  const raw = (clientY - rect.top) / rect.height;
+  const raw = (clientX - rect.left) / rect.width;
   if (!stopId) {
     return Math.max(ANIMATION_STOP_MIN_GAP, Math.min(1 - ANIMATION_STOP_MIN_GAP, raw));
   }
   return clampAnimationStopPosition(stops, stopId, raw);
 }
 
-function AnimationColorRow({ label, hex, onChange, ariaLabel, compact = false }) {
-  const hexUpper = ensureHex(hex).toUpperCase();
-  return (
-    <div className={`animation-base-color ${compact ? "animation-base-color--compact" : ""}`}>
-      <ColorPickerPopover
-        hex={hex}
-        onChange={onChange}
-        ariaLabel={ariaLabel}
-        triggerClassName={`animation-base-color__swatch ${compact ? "animation-base-color__swatch--compact" : ""}`}
-        triggerStyle={{ background: hex, "--swatch-color": hex }}
-      />
-      <div className="animation-base-color__meta">
-        <Text fw={600} size={compact ? "xs" : "sm"}>
-          {label}
-        </Text>
-        <Text ff="monospace" size="xs" fw={600} c="dimmed">
-          {hexUpper}
-        </Text>
-      </div>
-    </div>
-  );
-}
-
-export function AnimationColorControls({ settings, onChange, compactHint }) {
+export function AnimationColorControls({ settings, onChange }) {
   const stops = resolveAnimationColorStops(settings, settings.hex);
   const activeStopId = settings.animationActiveColorStopId || stops[0]?.id;
   const canRemoveStop = stops.length > 2;
@@ -100,6 +80,15 @@ export function AnimationColorControls({ settings, onChange, compactHint }) {
   const activeStopIdRef = useRef(activeStopId);
   const [draggingId, setDraggingId] = useState(null);
   const [dragPreview, setDragPreview] = useState(null);
+  const [newStopIds, setNewStopIds] = useState([]);
+
+  const markStopNew = useCallback((stopId) => {
+    if (!stopId) return;
+    setNewStopIds((ids) => (ids.includes(stopId) ? ids : [...ids, stopId]));
+    window.setTimeout(() => {
+      setNewStopIds((ids) => ids.filter((id) => id !== stopId));
+    }, NEW_STOP_ANIM_MS);
+  }, []);
 
   useEffect(() => {
     stopsRef.current = stops;
@@ -153,6 +142,7 @@ export function AnimationColorControls({ settings, onChange, compactHint }) {
       sampleAnimationColor(currentStops, insertAt)
     );
     const added = findAddedStop(currentStops, nextStops);
+    markStopNew(added?.id);
     applyStops(nextStops, added?.id || activeStopIdRef.current);
   };
 
@@ -176,12 +166,12 @@ export function AnimationColorControls({ settings, onChange, compactHint }) {
     setDragPreview(null);
   }, []);
 
-  const updateDragPreview = useCallback((clientY) => {
+  const updateDragPreview = useCallback((clientX) => {
     const stopId = dragStopRef.current;
     const track = trackRef.current;
     if (!stopId || !track) return;
 
-    const position = positionFromPointer(track, clientY, stopId, stopsRef.current);
+    const position = positionFromPointer(track, clientX, stopId, stopsRef.current);
     const next = { stopId, position };
     dragPreviewRef.current = next;
     setDragPreview(next);
@@ -209,15 +199,15 @@ export function AnimationColorControls({ settings, onChange, compactHint }) {
     (event) => {
       if (!dragStopRef.current || !dragStartRef.current) return;
 
-      const dy = Math.abs(event.clientY - dragStartRef.current.y);
-      if (!didDragRef.current && dy > DRAG_THRESHOLD_PX) {
+      const dx = Math.abs(event.clientX - dragStartRef.current.x);
+      if (!didDragRef.current && dx > DRAG_THRESHOLD_PX) {
         didDragRef.current = true;
       }
 
       if (!didDragRef.current) return;
 
-      dragStartRef.current.lastY = event.clientY;
-      updateDragPreview(event.clientY);
+      dragStartRef.current.lastX = event.clientX;
+      updateDragPreview(event.clientX);
     },
     [updateDragPreview]
   );
@@ -226,8 +216,8 @@ export function AnimationColorControls({ settings, onChange, compactHint }) {
     (event) => {
       if (!dragStopRef.current) return;
       if (didDragRef.current) {
-        dragStartRef.current.lastY = event.clientY;
-        updateDragPreview(event.clientY);
+        dragStartRef.current.lastX = event.clientX;
+        updateDragPreview(event.clientX);
       }
       trackRef.current?.releasePointerCapture(event.pointerId);
       commitDrag();
@@ -237,19 +227,20 @@ export function AnimationColorControls({ settings, onChange, compactHint }) {
 
   const handleTrackPointerDown = (event) => {
     if (event.button !== 0 || dragStopRef.current) return;
-    if (event.target.closest(".gradient-editor__handle")) return;
+    if (event.target.closest(".animation-palette-editor__handle")) return;
 
     const track = trackRef.current;
     if (!track) return;
 
     const currentStops = stopsRef.current;
-    const position = positionFromPointer(track, event.clientY, null, currentStops);
+    const position = positionFromPointer(track, event.clientX, null, currentStops);
     const nextStops = insertAnimationColorStop(
       currentStops,
       position,
       sampleAnimationColor(currentStops, position)
     );
     const added = findAddedStop(currentStops, nextStops);
+    markStopNew(added?.id);
     applyStops(nextStops, added?.id || activeStopIdRef.current);
   };
 
@@ -260,7 +251,7 @@ export function AnimationColorControls({ settings, onChange, compactHint }) {
     event.stopPropagation();
 
     dragStopRef.current = stopId;
-    dragStartRef.current = { y: event.clientY, lastY: event.clientY };
+    dragStartRef.current = { x: event.clientX, lastX: event.clientX };
     didDragRef.current = false;
     setDraggingId(stopId);
     setDragPreview(null);
@@ -276,156 +267,133 @@ export function AnimationColorControls({ settings, onChange, compactHint }) {
   }, [stops, draggingId, dragPreview]);
 
   const orderedStops = sortedStops(visualStops);
-  const activeStop = orderedStops.find((stop) => stop.id === activeStopId) || orderedStops[0];
+  const activeStop =
+    orderedStops.find((stop) => stop.id === activeStopId) || orderedStops[0] || null;
 
   return (
-    <div className="animation-palette animation-palette--vertical">
-      <div className="animation-palette__header">
-        <div>
-          <Text fw={600} size="sm">
-            Palette
-          </Text>
-          <Text size="xs" c="dimmed" lh={1.35}>
-            {compactHint || "Drag top/bottom or middle stops, click track to add"}
-          </Text>
+    <div className="animation-palette-editor">
+      <div className="animation-palette-editor__header">
+        <Text size="xs" c="dimmed" className="animation-palette-editor__hint">
+          Tap the bar to add · drag handles to blend
+        </Text>
+        <div className="animation-palette-editor__header-actions">
+          <span className="animation-palette-editor__count">
+            {stops.length} color{stops.length === 1 ? "" : "s"}
+          </span>
+          <button
+            type="button"
+            className="gradient-editor__tool-btn"
+            onClick={addStop}
+            aria-label="Add color in largest gap"
+          >
+            <IconPlus size={15} stroke={1.75} aria-hidden />
+            <span>Add</span>
+          </button>
         </div>
-        <button type="button" className="animation-palette__add-btn" onClick={addStop}>
-          <IconPlus size={14} stroke={1.75} aria-hidden />
-          <span>Add</span>
-        </button>
       </div>
 
-      <div className="animation-palette__workspace">
-        <div className="animation-palette__rail">
+      <div className="animation-palette-editor__track-wrap">
+        <div
+          ref={trackRef}
+          className={`animation-palette-editor__track ${draggingId ? "animation-palette-editor__track--dragging" : ""}`}
+          onPointerDown={handleTrackPointerDown}
+          onPointerMove={handleTrackPointerMove}
+          onPointerUp={handleTrackPointerUp}
+          onPointerCancel={handleTrackPointerUp}
+          role="presentation"
+        >
           <div
-            ref={trackRef}
-            className={`gradient-editor__track gradient-editor__track--vertical animation-palette__track ${draggingId ? "gradient-editor__track--dragging" : ""}`}
-            onPointerDown={handleTrackPointerDown}
-            onPointerMove={handleTrackPointerMove}
-            onPointerUp={handleTrackPointerUp}
-            onPointerCancel={handleTrackPointerUp}
-            role="presentation"
-          >
-            <div
-              className="gradient-editor__track-fill"
-              style={{ background: buildGradientTrackBackground(visualStops, "180deg") }}
-              aria-hidden
-            />
-            <div className="gradient-editor__track-shine" aria-hidden />
-            {orderedStops.map((stop) => {
-              const isActive = stop.id === activeStopId;
-              const isDragging = stop.id === draggingId;
-              const { isFirst, isLast } = stopEdgeFlags(stops, stop.id);
-              return (
+            className="animation-palette-editor__track-fill"
+            style={{ background: buildGradientTrackBackground(visualStops, TRACK_GRADIENT_DIRECTION) }}
+            aria-hidden
+          />
+          <div className="animation-palette-editor__track-shine" aria-hidden />
+          {orderedStops.map((stop) => {
+            const isActive = stop.id === activeStopId;
+            const isDragging = stop.id === draggingId;
+            const { isEdge } = stopEdgeFlags(stops, stop.id);
+
+            return (
+              <button
+                key={stop.id}
+                type="button"
+                className={`animation-palette-editor__handle ${isActive ? "animation-palette-editor__handle--active" : ""} ${isDragging ? "animation-palette-editor__handle--dragging" : ""} ${isEdge ? "animation-palette-editor__handle--edge" : ""} ${newStopIds.includes(stop.id) ? "animation-palette-editor__handle--new" : ""}`}
+                style={{ left: `${stop.position * 100}%` }}
+                onPointerDown={(event) => beginStopDrag(event, stop.id)}
+                aria-label={`Palette color at ${formatStopPosition(stop.position)}`}
+                aria-pressed={isActive}
+              >
                 <span
-                  key={stop.id}
-                  role="button"
-                  tabIndex={0}
-                  className={[
-                    "gradient-editor__handle",
-                    "animation-palette__handle",
-                    isActive ? "gradient-editor__handle--active" : "",
-                    isDragging ? "gradient-editor__handle--dragging" : "",
-                    isFirst || isLast ? "gradient-editor__handle--edge" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  style={{ top: `${stop.position * 100}%` }}
-                  onPointerDown={(event) => beginStopDrag(event, stop.id)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      selectStop(stop.id);
-                    }
-                  }}
-                  aria-label={`Palette color at ${formatStopPosition(stop.position)} from top`}
-                  aria-pressed={isActive}
-                >
-                  <span className="gradient-editor__handle-color" style={{ background: stop.color }} />
-                  {isDragging ? (
-                    <span className="gradient-editor__handle-badge">
-                      {formatStopPosition(stop.position)}
-                    </span>
-                  ) : null}
-                </span>
-              );
-            })}
-          </div>
+                  className="animation-palette-editor__handle-color"
+                  style={{ background: stop.color }}
+                />
+                {isDragging ? (
+                  <span className="animation-palette-editor__handle-badge">
+                    {formatStopPosition(stop.position)}
+                  </span>
+                ) : null}
+              </button>
+            );
+          })}
         </div>
+        <div className="animation-palette-editor__scale" aria-hidden>
+          <span>0%</span>
+          <span>50%</span>
+          <span>100%</span>
+        </div>
+      </div>
 
-        <div className="animation-palette__side">
-          <div className="animation-palette__stops" role="list" aria-label="Animation palette colors">
-            {orderedStops.map((stop) => {
-              const isActive = stop.id === activeStopId;
-              const { isFirst, isLast } = stopEdgeFlags(stops, stop.id);
-              const edgeLabel = isFirst ? "Top" : isLast ? "Bottom" : null;
-              return (
-                <div
-                  key={stop.id}
-                  role="listitem"
-                  className={`gradient-stop-chip animation-palette__chip ${isActive ? "gradient-stop-chip--active" : ""} ${canRemoveStop ? "gradient-stop-chip--has-remove" : ""}`}
-                >
-                  <div className="gradient-stop-chip__swatch-wrap">
-                    <ColorPickerPopover
-                      hex={stop.color}
-                      onChange={(hex) => applyStopColor(stop.id, hex)}
-                      onOpen={() => selectStop(stop.id)}
-                      ariaLabel={`Edit ${edgeLabel || "palette"} color`}
-                      triggerClassName="gradient-stop-chip__swatch"
-                      triggerStyle={{ background: stop.color }}
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    className="gradient-stop-chip__body"
-                    onClick={() => selectStop(stop.id)}
-                    aria-pressed={isActive}
-                  >
-                    <span className="gradient-stop-chip__label">
-                      {edgeLabel ? `${edgeLabel} · ${formatStopPosition(stop.position)}` : `${formatStopPosition(stop.position)} from top`}
-                    </span>
-                    <span className="gradient-stop-chip__hex">{stop.color.toUpperCase()}</span>
-                  </button>
-                  {canRemoveStop ? (
-                    <Tooltip label="Remove color" withArrow position="left">
-                      <button
-                        type="button"
-                        className="gradient-stop-chip__remove"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          deleteStopById(stop.id);
-                        }}
-                        aria-label={`Remove color at ${formatStopPosition(stop.position)}`}
-                      >
-                        <IconTrash size={14} stroke={1.75} />
-                      </button>
-                    </Tooltip>
-                  ) : null}
-                </div>
-              );
-            })}
+      {activeStop ? (
+        <div className="animation-palette-editor__inspector">
+          <div className="animation-palette-editor__inspector-swatch">
+            <ColorPickerPopover
+              hex={activeStop.color}
+              onChange={(hex) => applyStopColor(activeStop.id, hex)}
+              onOpen={() => selectStop(activeStop.id)}
+              ariaLabel={`Edit color at ${formatStopPosition(activeStop.position)}`}
+              triggerClassName="animation-palette-editor__inspector-picker"
+              triggerStyle={{ background: activeStop.color }}
+            />
           </div>
-
-          {activeStop ? (
-            <div className="animation-palette__active">
-              <ColorPickerPopover
-                hex={activeStop.color}
-                onChange={(hex) => applyStopColor(activeStop.id, hex)}
-                ariaLabel={`Edit active palette color at ${formatStopPosition(activeStop.position)} from top`}
-                triggerClassName="animation-palette__active-swatch"
-                triggerStyle={{ background: activeStop.color }}
-              />
-              <div className="animation-palette__active-meta">
-                <Text fw={600} size="xs">
-                  Active · {formatStopPosition(activeStop.position)} from top
-                </Text>
-                <Text ff="monospace" size="xs" c="dimmed">
-                  {activeStop.color.toUpperCase()}
-                </Text>
-              </div>
-            </div>
+          <div className="animation-palette-editor__inspector-body">
+            <Text size="xs" fw={600} className="animation-palette-editor__inspector-label">
+              Selected · {formatStopPosition(activeStop.position)}
+            </Text>
+            <Text ff="monospace" size="xs" fw={600} className="animation-palette-editor__inspector-hex">
+              {activeStop.color.toUpperCase()}
+            </Text>
+          </div>
+          {canRemoveStop ? (
+            <Tooltip label="Remove color" withArrow position="top">
+              <button
+                type="button"
+                className="animation-palette-editor__inspector-remove"
+                onClick={() => deleteStopById(activeStop.id)}
+                aria-label={`Remove color at ${formatStopPosition(activeStop.position)}`}
+              >
+                <IconTrash size={15} stroke={1.75} />
+              </button>
+            </Tooltip>
           ) : null}
         </div>
+      ) : null}
+
+      <div className="animation-palette-editor__dots" role="list" aria-label="Palette colors">
+        {orderedStops.map((stop) => {
+          const isActive = stop.id === activeStopId;
+          return (
+            <button
+              key={stop.id}
+              type="button"
+              role="listitem"
+              className={`animation-palette-editor__dot ${isActive ? "animation-palette-editor__dot--active" : ""}`}
+              style={{ "--dot-color": stop.color }}
+              onClick={() => selectStop(stop.id)}
+              aria-label={`Select ${formatStopPosition(stop.position)} · ${stop.color.toUpperCase()}`}
+              aria-pressed={isActive}
+            />
+          );
+        })}
       </div>
     </div>
   );
@@ -446,13 +414,28 @@ export function AnimationSingleColorControl({ settings, onChange, label = "Color
     );
   };
 
+  const hexUpper = ensureHex(settings.hex).toUpperCase();
+
   return (
-    <AnimationColorRow
-      label={label}
-      hex={settings.hex}
-      onChange={handleChange}
-      ariaLabel={`Animation ${label}`}
-      compact
-    />
+    <div className="gradient-controls__solid">
+      <ColorPickerPopover
+        hex={settings.hex}
+        onChange={handleChange}
+        ariaLabel={`Animation ${label}`}
+        triggerClassName="gradient-controls__solid-swatch"
+        triggerStyle={{ background: settings.hex, "--swatch-color": settings.hex }}
+      />
+      <div className="gradient-controls__solid-body">
+        <Text fw={600} size="sm">
+          {label}
+        </Text>
+        <Text ff="monospace" size="xs" fw={600} className="gradient-controls__solid-hex">
+          {hexUpper}
+        </Text>
+        <Text size="xs" c="dimmed" lh={1.45}>
+          Single color for this effect. Click the swatch to edit.
+        </Text>
+      </div>
+    </div>
   );
 }

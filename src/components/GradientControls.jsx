@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActionIcon, Text, Tooltip } from "@mantine/core";
+import { Text, Tooltip } from "@mantine/core";
 import {
   IconBucket,
   IconGradienter,
   IconPlus,
-  IconSend,
-  IconSparkles,
   IconTrash,
 } from "@tabler/icons-react";
 import {
@@ -28,7 +26,6 @@ import {
   toastAiGradientApplied,
   toastAiGradientError,
   toastAiGradientMissingKey,
-  toastWarning,
 } from "../lib/appToast";
 import {
   AI_GRADIENT_MODES,
@@ -39,6 +36,7 @@ import {
 import { analyzeColorPrompt } from "../lib/animationPalettePrompt";
 import { skydimo } from "../lib/skydimoApi";
 import { ColorPickerPopover } from "./ColorPickerPopup";
+import { AiColorAssistant } from "./AiColorAssistant";
 import { SectionLabel } from "./ui/AppPanel";
 
 const PAINT_OPTIONS = [
@@ -95,7 +93,6 @@ export function GradientControls({ settings, ledCount, deviceModel, onChange, on
   const [dragPreview, setDragPreview] = useState(null);
   const [newStopIds, setNewStopIds] = useState([]);
   const [aiLoading, setAiLoading] = useState(false);
-  const [aiMood, setAiMood] = useState("");
 
   const markStopNew = useCallback((stopId) => {
     if (!stopId) return;
@@ -308,20 +305,27 @@ export function GradientControls({ settings, ledCount, deviceModel, onChange, on
     applyGradient(nextStops, nextActiveId);
   };
 
-  const suggestGradientWithAi = async (mode = AI_GRADIENT_MODES.FRESH) => {
+  const suggestGradientWithAi = async (prompt, mode = AI_GRADIENT_MODES.FRESH) => {
     const apiKey = settings.openaiApiKey?.trim();
     if (!apiKey) {
       toastAiGradientMissingKey();
-      return;
+      return { ok: false, error: "Add your OpenAI API key in Settings to use AI suggestions." };
     }
     if (!canPaintGradient) {
-      toastWarning("Select LEDs", "Choose 2 or more LEDs on the map before using AI gradient.");
-      return;
+      return {
+        ok: false,
+        error: "Select 2 or more LEDs on the preview map first.",
+      };
+    }
+
+    const trimmedPrompt = prompt?.trim() || "";
+    const isFresh = mode === AI_GRADIENT_MODES.FRESH;
+    if (!trimmedPrompt && isFresh) {
+      return { ok: false, error: "Tell me what colors or mood you want first." };
     }
 
     const anchors = getGradientAnchorPair(gradientStops, settings.hex);
-    const isFresh = mode === AI_GRADIENT_MODES.FRESH;
-    const constraints = analyzeColorPrompt(aiMood);
+    const constraints = analyzeColorPrompt(trimmedPrompt);
 
     setAiLoading(true);
     try {
@@ -333,33 +337,36 @@ export function GradientControls({ settings, ledCount, deviceModel, onChange, on
         colorTo: anchors.colorTo,
         topPosition: anchors.topPosition,
         bottomPosition: anchors.bottomPosition,
-        mood: aiMood,
+        mood: trimmedPrompt,
         constraints: isFresh ? constraints : undefined,
       });
       const nextStops = isFresh
-        ? parseFreshGradientSuggestion(raw, settings.hex, aiMood)
+        ? parseFreshGradientSuggestion(raw, settings.hex, trimmedPrompt)
         : parseBlendGradientSuggestion(raw, settings.hex, anchors);
       nextStops.forEach((stop) => markStopNew(stop.id));
       applyGradient(nextStops, nextStops[0]?.id);
       toastAiGradientApplied(nextStops.length, mode);
+
+      const ledLabel = `${selected.length} LED${selected.length === 1 ? "" : "s"}`;
+      const message = isFresh
+        ? trimmedPrompt
+          ? `Applied a new gradient to ${ledLabel} based on “${trimmedPrompt}”.`
+          : `Applied a new gradient to ${ledLabel}.`
+        : `Updated middle keyframes for ${ledLabel} while keeping your edge colors.`;
+
+      return { ok: true, message };
     } catch (error) {
       toastAiGradientError(error?.message);
+      return { ok: false, error: error?.message || "Something went wrong. Try again." };
     } finally {
       setAiLoading(false);
     }
   };
 
-  const submitAiPrompt = (event) => {
-    event?.preventDefault();
-    if (aiLoading || !canUseAi) return;
-    suggestGradientWithAi(AI_GRADIENT_MODES.FRESH);
-  };
-
-  const handleAiKeyDown = (event) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      submitAiPrompt(event);
-    }
+  const handleAiSend = async (prompt, options = {}) => {
+    const mode =
+      options.mode === "blend" ? AI_GRADIENT_MODES.BLEND : AI_GRADIENT_MODES.FRESH;
+    return suggestGradientWithAi(prompt, mode);
   };
 
   const handleTrackPointerDown = (event) => {
@@ -403,15 +410,48 @@ export function GradientControls({ settings, ledCount, deviceModel, onChange, on
 
   const orderedStops = sortedStops(visualStops);
   const hexUpper = ensureHex(settings.hex).toUpperCase();
+  const selectionKey = selected.join("-");
 
   return (
     <section className="color-section gradient-controls">
       <SectionLabel
         icon={IconGradienter}
         right={
-          <Text size="xs" c="dimmed" fw={600}>
-            {canPaintGradient ? `${selected.length} LEDs` : "Select region"}
-          </Text>
+          <div className="gradient-controls__header-actions">
+            <Text size="xs" c="dimmed" fw={600}>
+              {canPaintGradient ? `${selected.length} LEDs` : "Select region"}
+            </Text>
+            {isGradient ? (
+              <AiColorAssistant
+                key={selectionKey}
+                label="AI gradient"
+                title="AI Gradient Assistant"
+                contextLabel={
+                  canPaintGradient
+                    ? `Gradient for ${selected.length} selected LEDs`
+                    : "Multi-LED gradient"
+                }
+                disabled={!canUseAi}
+                disabledTitle="Select 2 or more LEDs on the preview map"
+                hasApiKey={hasApiKey}
+                loading={aiLoading}
+                onSend={handleAiSend}
+                welcomeMessage={
+                  canUseAi
+                    ? `Hi! Describe the gradient you want for ${selected.length} selected LEDs and I'll update the keyframes on the track.`
+                    : "Hi! Drag on the preview map to select 2 or more LEDs, then tell me the gradient you want."
+                }
+                placeholder="Sunset orange and purple, icy blue, 7-color rainbow…"
+                suggestions={[
+                  "Sunset orange and purple",
+                  "Icy blue and white",
+                  "Rainbow across the strip",
+                ]}
+                showBlend={canUseAi}
+                blendLabel="Keep edge colors"
+              />
+            ) : null}
+          </div>
         }
       >
         Multi-LED paint
@@ -591,89 +631,6 @@ export function GradientControls({ settings, ledCount, deviceModel, onChange, on
           </div>
         )}
       </div>
-
-      {isGradient ? (
-        <form
-          className={`animation-ai-composer ${!canUseAi ? "animation-ai-composer--idle" : ""}`}
-          onSubmit={submitAiPrompt}
-        >
-          <div className="animation-ai-composer__header">
-            <span className="animation-ai-composer__badge" aria-hidden>
-              <IconSparkles size={14} stroke={1.75} />
-            </span>
-            <div className="animation-ai-composer__heading">
-              <Text fw={600} size="sm">
-                AI gradient
-              </Text>
-              <Text size="xs" c="dimmed" lh={1.35}>
-                {canUseAi
-                  ? `Describe colors for the ${selected.length} selected LEDs — keyframes update on the track.`
-                  : "Select 2 or more LEDs on the preview map, then describe the gradient you want."}
-              </Text>
-            </div>
-          </div>
-
-          <div
-            className={`animation-ai-composer__field ${aiLoading ? "animation-ai-composer__field--loading" : ""}`}
-          >
-            <textarea
-              className="animation-ai-composer__input"
-              value={aiMood}
-              onChange={(event) => setAiMood(event.currentTarget.value)}
-              onKeyDown={handleAiKeyDown}
-              placeholder={
-                canUseAi
-                  ? "Sunset orange and purple, icy blue, 7 màu rainbow sặc sỡ…"
-                  : "Select a region first…"
-              }
-              rows={2}
-              disabled={aiLoading || !canUseAi}
-              aria-label="Gradient color prompt"
-            />
-            <button
-              type="submit"
-              className="animation-ai-composer__send"
-              disabled={aiLoading || !hasApiKey || !canUseAi}
-              aria-label="Generate gradient from prompt"
-              title={
-                !canUseAi
-                  ? "Select 2 or more LEDs first"
-                  : hasApiKey
-                    ? "Generate gradient (Enter)"
-                    : "Add OpenAI API key in Settings"
-              }
-            >
-              {aiLoading ? (
-                <span className="animation-ai-composer__spinner" aria-hidden />
-              ) : (
-                <IconSend size={17} stroke={1.85} aria-hidden />
-              )}
-            </button>
-          </div>
-
-          <div className="animation-ai-composer__footer">
-            <Text size="xs" c="dimmed" className="animation-ai-composer__hint">
-              Enter to generate · Shift+Enter for new line
-            </Text>
-            {canUseAi ? (
-              <button
-                type="button"
-                className="animation-ai-composer__chip"
-                disabled={aiLoading || !hasApiKey}
-                onClick={() => suggestGradientWithAi(AI_GRADIENT_MODES.BLEND)}
-              >
-                Keep edge colors (uses current keyframes)
-              </button>
-            ) : null}
-          </div>
-
-          {!hasApiKey ? (
-            <Text size="xs" c="dimmed" lh={1.45} className="animation-ai-composer__key-hint">
-              Add your OpenAI API key in Settings to use AI suggestions.
-            </Text>
-          ) : null}
-        </form>
-      ) : null}
     </section>
   );
 }

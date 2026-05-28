@@ -1,30 +1,26 @@
-import { useState } from "react";
-import { SegmentedControl, Text, Tooltip } from "@mantine/core";
+import { useMemo, useState } from "react";
+import { Text, Tooltip } from "@mantine/core";
 import {
   IconActivity,
+  IconArrowMoveLeft,
+  IconArrowMoveRight,
   IconBolt,
-  IconBulb,
   IconCloud,
   IconCloudBolt,
-  IconColorSwatch,
-  IconComet,
-  IconDroplet,
   IconFlame,
   IconHeartbeat,
   IconMeteor,
   IconMoon,
   IconPalette,
-  IconPlayerStop,
   IconRipple,
   IconScan,
-  IconSend,
+  IconSearch,
   IconShield,
-  IconSparkles,
   IconStars,
   IconSunset2,
   IconTransitionRight,
-  IconVolcano,
   IconWaveSine,
+  IconX,
 } from "@tabler/icons-react";
 import { buildAnimationSwitchPatch } from "../lib/animationColors";
 import {
@@ -40,14 +36,18 @@ import {
 } from "../lib/openaiAnimation";
 import { skydimo } from "../lib/skydimoApi";
 import {
+  ANIMATION_GROUP_IDS,
+  ANIMATION_GROUP_OPTIONS,
   ANIMATION_IDS,
-  ANIMATIONS,
   ANIMATION_PALETTE,
+  filterAnimations,
   getAnimationColorControls,
   getAnimationConfig,
   isValidAnimationId,
 } from "../lib/animations";
 import { AnimationColorControls, AnimationSingleColorControl } from "./AnimationColorControls";
+import { AiColorAssistant } from "./AiColorAssistant";
+import { SectionLabel } from "./ui/AppPanel";
 import { AppSlider, appSliderTuningClassNames } from "./ui/AppSlider";
 
 const ANIMATION_ICONS = {
@@ -59,26 +59,20 @@ const ANIMATION_ICONS = {
   [ANIMATION_IDS.FIRE]: IconFlame,
   [ANIMATION_IDS.AURORA]: IconCloud,
   [ANIMATION_IDS.PULSE]: IconRipple,
-  [ANIMATION_IDS.COMET]: IconComet,
   [ANIMATION_IDS.STROBE]: IconBolt,
-  [ANIMATION_IDS.BLEND]: IconColorSwatch,
   [ANIMATION_IDS.POLICE]: IconShield,
-  [ANIMATION_IDS.OCEAN]: IconDroplet,
   [ANIMATION_IDS.HEARTBEAT]: IconHeartbeat,
   [ANIMATION_IDS.SCANNER]: IconScan,
   [ANIMATION_IDS.METEOR]: IconMeteor,
   [ANIMATION_IDS.LIGHTNING]: IconCloudBolt,
-  [ANIMATION_IDS.LAVA]: IconVolcano,
-  [ANIMATION_IDS.NEON]: IconBulb,
-  [ANIMATION_IDS.TWINKLE]: IconSparkles,
   [ANIMATION_IDS.SPECTRUM]: IconTransitionRight,
   [ANIMATION_IDS.FADE]: IconSunset2,
-  [ANIMATION_IDS.CANDLE]: IconFlame,
 };
 
 export function AnimationPanel({ settings, onChange }) {
   const [aiLoading, setAiLoading] = useState(false);
-  const [aiMood, setAiMood] = useState("");
+  const [effectGroup, setEffectGroup] = useState(ANIMATION_GROUP_IDS.ALL);
+  const [effectQuery, setEffectQuery] = useState("");
   const activeId = isValidAnimationId(settings.animationId) ? settings.animationId : null;
   const activeConfig = activeId ? getAnimationConfig(activeId) : null;
   const colorControls = getAnimationColorControls(activeConfig);
@@ -93,26 +87,29 @@ export function AnimationPanel({ settings, onChange }) {
     onChange(buildAnimationSwitchPatch(settings, id));
   };
 
-  const stopAnimation = () => {
-    onChange({ animationId: null });
-  };
-
-  const suggestAnimationWithAi = async (mode = AI_ANIMATION_MODES.PALETTE_FRESH) => {
+  const suggestAnimationWithAi = async (prompt, mode = AI_ANIMATION_MODES.PALETTE_FRESH) => {
     const apiKey = settings.openaiApiKey?.trim();
     if (!apiKey) {
       toastAiGradientMissingKey();
-      return;
+      return { ok: false, error: "Add your OpenAI API key in Settings to use AI suggestions." };
     }
 
     if (!activeId) {
-      toastAiAnimationError("Select an effect first — AI generates colors for the active animation.");
-      return;
+      return {
+        ok: false,
+        error: "Select an effect first — I'll generate colors for the active animation.",
+      };
+    }
+
+    const trimmedPrompt = prompt?.trim() || "";
+    if (!trimmedPrompt && mode === AI_ANIMATION_MODES.PALETTE_FRESH) {
+      return { ok: false, error: "Tell me what colors or mood you want first." };
     }
 
     const effectConfig = getAnimationConfig(activeId);
     const paletteMode =
       effectConfig?.colorPalette === ANIMATION_PALETTE.SINGLE ? "single" : "multi";
-    const constraints = analyzeColorPrompt(aiMood);
+    const constraints = analyzeColorPrompt(trimmedPrompt);
 
     setAiLoading(true);
     try {
@@ -123,227 +120,239 @@ export function AnimationPanel({ settings, onChange }) {
         effectLabel: effectConfig?.label || "Animation",
         effectHint: effectConfig?.hint || "LED perimeter effect",
         paletteMode,
-        mood: aiMood,
+        mood: trimmedPrompt,
         constraints,
       });
 
-      const nextStops = parseAnimationPaletteSuggestion(raw, settings, mode, activeId, aiMood);
+      const nextStops = parseAnimationPaletteSuggestion(raw, settings, mode, activeId, trimmedPrompt);
       onChange(buildAnimationPaletteAiPatch(settings, nextStops));
       toastAiAnimationApplied(mode, effectConfig?.label);
+
+      const effectLabel = effectConfig?.label || "this effect";
+      const message =
+        mode === AI_ANIMATION_MODES.PALETTE_BLEND
+          ? `Updated the middle colors for ${effectLabel} while keeping your edge keyframes.`
+          : trimmedPrompt
+            ? `Applied a new palette to ${effectLabel} based on “${trimmedPrompt}”.`
+            : `Applied a new palette to ${effectLabel}.`;
+
+      return { ok: true, message };
     } catch (error) {
       toastAiAnimationError(error?.message);
+      return { ok: false, error: error?.message || "Something went wrong. Try again." };
     } finally {
       setAiLoading(false);
     }
   };
 
-  const submitAiPrompt = (event) => {
-    event?.preventDefault();
-    if (aiLoading) return;
-    suggestAnimationWithAi(AI_ANIMATION_MODES.PALETTE_FRESH);
+  const handleAiSend = async (prompt, options = {}) => {
+    const mode =
+      options.mode === "blend" ? AI_ANIMATION_MODES.PALETTE_BLEND : AI_ANIMATION_MODES.PALETTE_FRESH;
+    return suggestAnimationWithAi(prompt, mode);
   };
 
-  const handleAiKeyDown = (event) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      submitAiPrompt();
-    }
-  };
+  const visibleEffects = useMemo(
+    () => filterAnimations({ group: effectGroup, query: effectQuery }),
+    [effectGroup, effectQuery]
+  );
+
+  const hasEffectFilters =
+    effectGroup !== ANIMATION_GROUP_IDS.ALL || effectQuery.trim().length > 0;
 
   return (
     <div className="animation-panel">
-      <Text size="xs" c="dimmed" lh={1.45} mb={4}>
-        Pick an effect and tune speed, intensity, and colors. Effects run on the device while this
-        tab is open.
-      </Text>
+      <div className="animation-effect-picker">
+        <div className="animation-effect-picker__bar">
+          <div className="animation-effect-picker__filters" role="tablist" aria-label="Effect categories">
+            {ANIMATION_GROUP_OPTIONS.map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                className={`animation-effect-picker__filter ${effectGroup === id ? "animation-effect-picker__filter--active" : ""}`}
+                aria-selected={effectGroup === id}
+                onClick={() => setEffectGroup(id)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
 
-      <div className="animation-effect-grid" role="list">
-        {ANIMATIONS.map(({ id, label, hint }) => {
-          const Icon = ANIMATION_ICONS[id] || IconActivity;
-          const active = activeId === id;
-          return (
-            <Tooltip key={id} label={hint} openDelay={350}>
+          <label className="animation-effect-picker__search">
+            <IconSearch size={14} stroke={1.75} aria-hidden />
+            <input
+              type="search"
+              value={effectQuery}
+              onChange={(event) => setEffectQuery(event.currentTarget.value)}
+              placeholder="Search…"
+              aria-label="Search animation effects"
+            />
+            {effectQuery ? (
               <button
                 type="button"
-                role="listitem"
-                className={`animation-effect-card ${active ? "animation-effect-card--active" : ""}`}
-                onClick={() => selectAnimation(id)}
-                aria-pressed={active}
+                className="animation-effect-picker__search-clear"
+                onClick={() => setEffectQuery("")}
+                aria-label="Clear search"
               >
-                <span className="animation-effect-card__icon" aria-hidden>
-                  <Icon size={14} stroke={1.75} />
-                </span>
-                <span className="animation-effect-card__label">{label}</span>
+                <IconX size={12} stroke={1.75} />
               </button>
-            </Tooltip>
-          );
-        })}
+            ) : null}
+          </label>
+        </div>
+
+        {visibleEffects.length === 0 ? (
+          <Text size="xs" c="dimmed" className="animation-effect-picker__empty">
+            No effects match. Try another category or search term.
+          </Text>
+        ) : (
+          <div className="animation-effect-grid" role="list">
+            {visibleEffects.map(({ id, label, hint }) => {
+              const Icon = ANIMATION_ICONS[id] || IconActivity;
+              const active = activeId === id;
+              return (
+                <Tooltip key={id} label={hint} openDelay={300}>
+                  <button
+                    type="button"
+                    role="listitem"
+                    className={`animation-effect-chip ${active ? "animation-effect-chip--active" : ""}`}
+                    onClick={() => selectAnimation(id)}
+                    aria-pressed={active}
+                    aria-label={`${label}. ${hint}`}
+                  >
+                    <span className="animation-effect-chip__icon" aria-hidden>
+                      <Icon size={15} stroke={1.75} />
+                    </span>
+                    <span className="animation-effect-chip__label">{label}</span>
+                  </button>
+                </Tooltip>
+              );
+            })}
+          </div>
+        )}
+
+        {hasEffectFilters ? (
+          <Text size="xs" c="dimmed" className="animation-effect-picker__meta">
+            {visibleEffects.length} effect{visibleEffects.length === 1 ? "" : "s"}
+          </Text>
+        ) : null}
       </div>
 
       {activeId && (
-        <button type="button" className="animation-stop-btn" onClick={stopAnimation}>
-          <IconPlayerStop size={14} stroke={1.75} aria-hidden />
-          <span>Stop animation</span>
-        </button>
-      )}
-
-      <form
-        className={`animation-ai-composer ${!activeId ? "animation-ai-composer--idle" : ""}`}
-        onSubmit={submitAiPrompt}
-      >
-        <div className="animation-ai-composer__header">
-          <span className="animation-ai-composer__badge" aria-hidden>
-            <IconSparkles size={14} stroke={1.75} />
-          </span>
-          <div className="animation-ai-composer__heading">
-            <Text fw={600} size="sm">
-              AI colors
-            </Text>
-            <Text size="xs" c="dimmed" lh={1.35}>
-              {activeId
-                ? `Generate a palette for ${activeConfig?.label || "this effect"} — effect stays the same.`
-                : "Select an effect above, then describe the colors you want."}
-            </Text>
-          </div>
-        </div>
-
-        <div
-          className={`animation-ai-composer__field ${aiLoading ? "animation-ai-composer__field--loading" : ""}`}
-        >
-          <textarea
-            className="animation-ai-composer__input"
-            value={aiMood}
-            onChange={(event) => setAiMood(event.currentTarget.value)}
-            onKeyDown={handleAiKeyDown}
-            placeholder={
-              activeId
-                ? "Sunset orange and purple, icy blue, red & blue police…"
-                : "Pick an effect first…"
-            }
-            rows={2}
-            disabled={aiLoading || !activeId}
-            aria-label="Animation color prompt"
-          />
-          <button
-            type="submit"
-            className="animation-ai-composer__send"
-            disabled={aiLoading || !hasApiKey || !activeId}
-            aria-label="Generate colors for current effect"
-            title={
-              !activeId
-                ? "Select an effect first"
-                : hasApiKey
-                  ? "Generate colors (Enter)"
-                  : "Add OpenAI API key in Settings"
+        <section className="animation-customize">
+          <SectionLabel
+            icon={IconPalette}
+            right={
+              <AiColorAssistant
+                key={activeId}
+                title="AI Color Assistant"
+                contextLabel={
+                  activeConfig?.label
+                    ? `Palette for ${activeConfig.label}`
+                    : "Animation colors"
+                }
+                disabled={!activeId}
+                disabledTitle="Select an effect first"
+                hasApiKey={hasApiKey}
+                loading={aiLoading}
+                onSend={handleAiSend}
+                welcomeMessage={
+                  activeConfig?.label
+                    ? `Hi! Tell me the colors you want for ${activeConfig.label}. I'll update the palette and keep the same effect.`
+                    : "Hi! Pick an effect first, then describe the colors you want."
+                }
+                placeholder="Sunset orange and purple, icy blue, red & blue police…"
+                suggestions={[
+                  "Sunset orange and purple",
+                  "Icy blue and white",
+                  "Neon cyberpunk",
+                ]}
+                showBlend={Boolean(activeId)}
+                blendLabel="Keep edge colors"
+              />
             }
           >
-            {aiLoading ? (
-              <span className="animation-ai-composer__spinner" aria-hidden />
-            ) : (
-              <IconSend size={17} stroke={1.85} aria-hidden />
-            )}
-          </button>
-        </div>
-
-        <div className="animation-ai-composer__footer">
-          <Text size="xs" c="dimmed" className="animation-ai-composer__hint">
-            Enter to generate · Shift+Enter for new line
-          </Text>
-          {activeId ? (
-            <button
-              type="button"
-              className="animation-ai-composer__chip"
-              disabled={aiLoading || !hasApiKey}
-              onClick={() => suggestAnimationWithAi(AI_ANIMATION_MODES.PALETTE_BLEND)}
-            >
-              Keep edge colors (uses current keyframes)
-            </button>
-          ) : null}
-        </div>
-
-        {!hasApiKey ? (
-          <Text size="xs" c="dimmed" lh={1.45} className="animation-ai-composer__key-hint">
-            Add your OpenAI API key in Settings to use AI suggestions.
-          </Text>
-        ) : null}
-      </form>
-
-      {activeId && (
-        <div className="animation-customize">
-          <Text fw={600} size="sm" className="animation-customize__title">
             Customize
-          </Text>
+          </SectionLabel>
 
-          {colorControls.showPalette ? (
-            <AnimationColorControls settings={settings} onChange={onChange} />
-          ) : null}
+          <div className="gradient-controls__panel paint-mode-panel paint-mode-panel--animation">
+            {colorControls.showPalette ? (
+              <AnimationColorControls settings={settings} onChange={onChange} />
+            ) : null}
 
-          {colorControls.showSingleColor ? (
-            <AnimationSingleColorControl settings={settings} onChange={onChange} label="Color" />
-          ) : null}
+            {colorControls.showSingleColor ? (
+              <AnimationSingleColorControl settings={settings} onChange={onChange} label="Color" />
+            ) : null}
+          </div>
 
-          <div className="animation-tuning">
-            <div className="animation-tuning__header">
-              <span className="animation-tuning__label">Speed</span>
-              <span className="animation-tuning__value">{speedUi}%</span>
+          <div className="animation-tuning-grid">
+            <div className="animation-tuning-grid__sliders">
+              <div className="animation-tuning">
+                <div className="animation-tuning__header">
+                  <span className="animation-tuning__label">Speed</span>
+                  <span className="animation-tuning__value">{speedUi}%</span>
+                </div>
+                <AppSlider
+                  value={speed}
+                  onLiveChange={setSpeedUi}
+                  onChange={(value) => onChange({ animationSpeed: value })}
+                  min={1}
+                  max={100}
+                  size="md"
+                  classNames={appSliderTuningClassNames}
+                />
+              </div>
+
+              <div className="animation-tuning">
+                <div className="animation-tuning__header">
+                  <span className="animation-tuning__label">Intensity</span>
+                  <span className="animation-tuning__value">{intensityUi}%</span>
+                </div>
+                <AppSlider
+                  value={intensity}
+                  onLiveChange={setIntensityUi}
+                  onChange={(value) => onChange({ animationIntensity: value })}
+                  min={1}
+                  max={100}
+                  size="md"
+                  classNames={appSliderTuningClassNames}
+                />
+              </div>
             </div>
-            <AppSlider
-              value={speed}
-              onLiveChange={setSpeedUi}
-              onChange={(value) => onChange({ animationSpeed: value })}
-              min={1}
-              max={100}
-              size="md"
-              classNames={appSliderTuningClassNames}
-            />
-          </div>
 
-          <div className="animation-tuning">
-            <div className="animation-tuning__header">
-              <span className="animation-tuning__label">Intensity</span>
-              <span className="animation-tuning__value">{intensityUi}%</span>
+            <div className="animation-tuning-grid__direction">
+              <span className="animation-tuning__label">Direction</span>
+              <div className="animation-direction__toggle" role="group" aria-label="Playback direction">
+                <Tooltip label="Forward along wire path" withArrow openDelay={300}>
+                  <button
+                    type="button"
+                    className={`animation-direction__btn ${!reverse ? "animation-direction__btn--active" : ""}`}
+                    onClick={() => onChange({ animationReverse: false })}
+                    aria-label="Forward along wire path"
+                    aria-pressed={!reverse}
+                  >
+                    <IconArrowMoveRight size={17} stroke={1.85} aria-hidden />
+                  </button>
+                </Tooltip>
+                <Tooltip label="Reverse along wire path" withArrow openDelay={300}>
+                  <button
+                    type="button"
+                    className={`animation-direction__btn ${reverse ? "animation-direction__btn--active" : ""}`}
+                    onClick={() => onChange({ animationReverse: true })}
+                    aria-label="Reverse along wire path"
+                    aria-pressed={reverse}
+                  >
+                    <IconArrowMoveLeft size={17} stroke={1.85} aria-hidden />
+                  </button>
+                </Tooltip>
+              </div>
             </div>
-            <AppSlider
-              value={intensity}
-              onLiveChange={setIntensityUi}
-              onChange={(value) => onChange({ animationIntensity: value })}
-              min={1}
-              max={100}
-              size="md"
-              classNames={appSliderTuningClassNames}
-            />
           </div>
-
-          <div className="animation-direction">
-            <span className="animation-tuning__label">Direction</span>
-            <Text size="xs" c="dimmed" lh={1.35} mb={6}>
-              Forward follows wire path from calibration (
-              {settings.stripDirection === "ccw" ? "counter-clockwise" : "clockwise"}). Reverse
-              runs opposite.
-            </Text>
-            <SegmentedControl
-              value={reverse ? "reverse" : "forward"}
-              onChange={(value) => onChange({ animationReverse: value === "reverse" })}
-              data={[
-                { label: "Forward", value: "forward" },
-                { label: "Reverse", value: "reverse" },
-              ]}
-              size="xs"
-              fullWidth
-              classNames={{
-                root: "animation-direction__segmented",
-                indicator: "animation-direction__indicator",
-                label: "animation-direction__label",
-                control: "animation-direction__control",
-              }}
-            />
-          </div>
-        </div>
+        </section>
       )}
 
       {!activeId && (
         <Text size="xs" c="dimmed" lh={1.45} className="animation-panel__idle-hint">
-          Select an effect above, then use AI to generate its color palette.
+          Select an effect above to customize colors, speed, and direction.
         </Text>
       )}
     </div>

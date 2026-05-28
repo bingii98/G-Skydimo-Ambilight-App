@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   ANIMATION_IDS,
   ANIMATIONS,
+  ANIMATION_GROUP_IDS,
   ANIMATION_PALETTE,
   animationIntensityFactor,
   animationSpeedFactor,
   buildAnimationPixels,
+  filterAnimations,
   getAnimationColorControls,
   getAnimationConfig,
   isValidAnimationId,
@@ -14,13 +16,23 @@ import {
 import { buildAnimationPerimeterPhases } from "./animationSpatial";
 
 describe("animations", () => {
-  it("includes expanded effect catalog", () => {
-    expect(ANIMATIONS.length).toBeGreaterThanOrEqual(20);
+  it("includes compact effect catalog", () => {
+    expect(ANIMATIONS).toHaveLength(16);
     expect(isValidAnimationId(ANIMATION_IDS.AURORA)).toBe(true);
     expect(isValidAnimationId(ANIMATION_IDS.HEARTBEAT)).toBe(true);
     expect(isValidAnimationId(ANIMATION_IDS.METEOR)).toBe(true);
-    expect(isValidAnimationId(ANIMATION_IDS.CANDLE)).toBe(true);
+    expect(isValidAnimationId("ocean")).toBe(false);
     expect(isValidAnimationId("unknown")).toBe(false);
+  });
+
+  it("filters animation effects by group and search", () => {
+    const motion = filterAnimations({ group: ANIMATION_GROUP_IDS.MOTION });
+    expect(motion.some((item) => item.id === ANIMATION_IDS.CHASE)).toBe(true);
+    expect(motion.some((item) => item.id === ANIMATION_IDS.RAINBOW)).toBe(false);
+
+    const searched = filterAnimations({ query: "aurora" });
+    expect(searched).toHaveLength(1);
+    expect(searched[0]?.id).toBe(ANIMATION_IDS.AURORA);
   });
 
   it("maps speed and intensity sliders", () => {
@@ -59,7 +71,7 @@ describe("animations", () => {
     }
   });
 
-  it("respects reverse direction for blend", () => {
+  it("respects reverse direction for wave", () => {
     const baseSettings = {
       hex: "#FF0000",
       animationSecondaryHex: "#0000FF",
@@ -70,7 +82,7 @@ describe("animations", () => {
 
     const forward = pixelsToLedHexes(
       buildAnimationPixels({
-        animationId: ANIMATION_IDS.BLEND,
+        animationId: ANIMATION_IDS.WAVE,
         ledCount: 8,
         settings: { ...baseSettings, animationReverse: false },
         timeMs: 0,
@@ -80,7 +92,7 @@ describe("animations", () => {
 
     const reverse = pixelsToLedHexes(
       buildAnimationPixels({
-        animationId: ANIMATION_IDS.BLEND,
+        animationId: ANIMATION_IDS.WAVE,
         ledCount: 8,
         settings: { ...baseSettings, animationReverse: true },
         timeMs: 0,
@@ -91,8 +103,31 @@ describe("animations", () => {
     expect(forward).not.toEqual(reverse);
   });
 
+  it("migrates deprecated animation ids when building pixels", () => {
+    const settings = {
+      hex: "#003366",
+      animationSecondaryHex: "#00AACC",
+      animationColorStops: [
+        { id: "a", position: 0, color: "#003366" },
+        { id: "b", position: 1, color: "#00AACC" },
+      ],
+      brightness: 100,
+      animationSpeed: 50,
+      animationIntensity: 50,
+    };
+
+    const pixels = buildAnimationPixels({
+      animationId: "ocean",
+      ledCount: 8,
+      settings,
+      timeMs: 0,
+    });
+
+    expect(pixels.length).toBe(8 * 3);
+  });
+
   it("exposes palette metadata", () => {
-    expect(getAnimationConfig(ANIMATION_IDS.BLEND)?.colorPalette).toBe(ANIMATION_PALETTE.MULTI);
+    expect(getAnimationConfig(ANIMATION_IDS.WAVE)?.colorPalette).toBe(ANIMATION_PALETTE.MULTI);
     expect(getAnimationConfig(ANIMATION_IDS.BREATHE)?.colorPalette).toBe(ANIMATION_PALETTE.SINGLE);
     expect(getAnimationColorControls(getAnimationConfig(ANIMATION_IDS.WAVE))?.showPalette).toBe(true);
   });
