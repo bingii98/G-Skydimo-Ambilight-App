@@ -17,6 +17,7 @@ const BACKGROUND_KEY_THRESHOLD = 42;
 const SOURCE_CROP_X = 4;
 
 let processedLogoCache = null;
+let trimmedLogoCache = null;
 
 function keyOutDarkBackground(data) {
   for (let i = 0; i < data.length; i += 4) {
@@ -27,6 +28,38 @@ function keyOutDarkBackground(data) {
       data[i + 3] = 0;
     }
   }
+}
+
+async function buildTrimmedLogoFromSource() {
+  if (trimmedLogoCache) {
+    return trimmedLogoCache;
+  }
+
+  const meta = await sharp(LOGO_SOURCE).metadata();
+  const left = Math.min(SOURCE_CROP_X, Math.floor(((meta.width || 1) - 1) / 2));
+  const width = Math.max(1, (meta.width || 1) - left * 2);
+  const height = meta.height || 1;
+
+  const { data, info } = await sharp(LOGO_SOURCE)
+    .extract({ left, top: 0, width, height })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  keyOutDarkBackground(data);
+
+  trimmedLogoCache = await sharp(data, {
+    raw: {
+      width: info.width,
+      height: info.height,
+      channels: 4,
+    },
+  })
+    .trim({ threshold: 8 })
+    .png()
+    .toBuffer();
+
+  return trimmedLogoCache;
 }
 
 async function buildProcessedLogo() {
@@ -61,49 +94,46 @@ async function buildProcessedLogo() {
   return processedLogoCache;
 }
 
-async function extractLogoSource(cropX = SOURCE_CROP_X, cropY = 0) {
-  const meta = await sharp(LOGO_SOURCE).metadata();
-  const left = Math.min(cropX, Math.floor(((meta.width || 1) - 1) / 2));
-  const top = Math.min(cropY, Math.floor(((meta.height || 1) - 1) / 2));
-  const width = Math.max(1, (meta.width || 1) - left * 2);
-  const height = Math.max(1, (meta.height || 1) - top * 2);
+async function renderAppIcon(size, padding = 2) {
+  const trimmed = await buildTrimmedLogoFromSource();
+  const inner = Math.max(1, size - padding * 2);
+  const logo = await sharp(trimmed)
+    .resize(inner, inner, {
+      fit: "contain",
+      background: TRANSPARENT,
+    })
+    .png()
+    .toBuffer();
 
-  return sharp(LOGO_SOURCE).extract({ left, top, width, height });
+  return sharp({
+    create: {
+      width: size,
+      height: size,
+      channels: 4,
+      background: BRAND_BG,
+    },
+  })
+    .composite([{ input: logo, gravity: "centre" }])
+    .png()
+    .toBuffer();
 }
 
-async function renderBrandedLogo(size, cropX = SOURCE_CROP_X) {
-  const source = await extractLogoSource(cropX, 0);
-  return source
+async function renderInstallerLogo(size) {
+  const trimmed = await buildTrimmedLogoFromSource();
+
+  return sharp(trimmed)
     .resize(size, size, {
       fit: "contain",
-      background: BRAND_BG,
+      background: TRANSPARENT,
     })
     .png()
     .toBuffer();
 }
 
 async function renderTitlebarLogo(size) {
-  const meta = await sharp(LOGO_SOURCE).metadata();
-  const left = Math.min(SOURCE_CROP_X, Math.floor(((meta.width || 1) - 1) / 2));
-  const width = Math.max(1, (meta.width || 1) - left * 2);
-  const height = meta.height || 1;
+  const trimmed = await buildTrimmedLogoFromSource();
 
-  const { data, info } = await sharp(LOGO_SOURCE)
-    .extract({ left, top: 0, width, height })
-    .ensureAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-
-  keyOutDarkBackground(data);
-
-  return sharp(data, {
-    raw: {
-      width: info.width,
-      height: info.height,
-      channels: 4,
-    },
-  })
-    .trim({ threshold: 8 })
+  return sharp(trimmed)
     .resize(size, size, {
       fit: "contain",
       background: TRANSPARENT,
@@ -214,7 +244,7 @@ function installerLabelSvg(width, height, lines, accent = "#14B8A6") {
 async function renderInstallerSidebar(lines, accent) {
   const width = 164;
   const height = 314;
-  const logo = await renderBrandedLogo(84);
+  const logo = await renderInstallerLogo(84);
 
   const base = sharp({
     create: {
@@ -239,7 +269,7 @@ async function renderInstallerSidebar(lines, accent) {
 async function renderInstallerHeader() {
   const width = 150;
   const height = 57;
-  const logo = await renderBrandedLogo(36);
+  const logo = await renderInstallerLogo(36);
 
   const labeled = await sharp({
     create: {
@@ -276,9 +306,10 @@ async function main() {
   await fs.access(LOGO_SOURCE);
 
   processedLogoCache = null;
+  trimmedLogoCache = null;
 
   const iconSizes = [256, 128, 64, 48, 32, 16];
-  const iconPngBuffers = await Promise.all(iconSizes.map((size) => renderBrandedLogo(size)));
+  const iconPngBuffers = await Promise.all(iconSizes.map((size) => renderAppIcon(size)));
   const titlebarLogo = await renderTitlebarLogo(64);
   const trayDarkPng = await renderTrayIcon(TRAY_DARK_SOURCE, 32);
   const trayLightPng = await renderTrayIcon(TRAY_LIGHT_SOURCE, 32);
