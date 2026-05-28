@@ -1,6 +1,6 @@
 {
   "name": "skydimo-color",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Desktop ambilight app for Skydimo LED strips with screen sync, color control, gradients, animations, and USB auto-detection.",
   "license": "MIT",
   "main": "main.js",
