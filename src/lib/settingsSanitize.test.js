@@ -35,9 +35,9 @@ describe("sanitizeSettings", () => {
     expect(result.hex).toBe("#FF0000");
   });
 
-  it("preserves valid activeNav and falls back for invalid values", () => {
-    expect(sanitizeSettings({ activeNav: "external" }).activeNav).toBe("external");
-    expect(sanitizeSettings({ activeNav: "studio" }).activeNav).toBe("studio");
+  it("always normalizes activeNav to devices", () => {
+    expect(sanitizeSettings({ activeNav: "external" }).activeNav).toBe("devices");
+    expect(sanitizeSettings({ activeNav: "studio" }).activeNav).toBe("devices");
     expect(sanitizeSettings({ activeNav: "invalid" }).activeNav).toBe("devices");
   });
 

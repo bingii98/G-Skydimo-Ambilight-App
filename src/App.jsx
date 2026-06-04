@@ -115,7 +115,7 @@ export default function App() {
   }, [settings.colorScheme, setColorSchemePreference]);
 
   const [selectedPort, setSelectedPort] = useState(null);
-  const [activeNav, setActiveNav] = useState(() => sanitizeActiveNav(settings.activeNav));
+  const [activeNav, setActiveNav] = useState("devices");
   const [portFilter, setPortFilter] = useState("");
   const [scanning, setScanning] = useState(false);
   const [connecting, setConnecting] = useState(false);
@@ -236,14 +236,9 @@ export default function App() {
     [activeNav, saveSettings, updateOutputSettings]
   );
 
-  const handleNavChange = useCallback(
-    (nav) => {
-      const nextNav = sanitizeActiveNav(nav);
-      setActiveNav(nextNav);
-      saveSettings({ activeNav: nextNav });
-    },
-    [saveSettings]
-  );
+  const handleNavChange = useCallback((nav) => {
+    setActiveNav(sanitizeActiveNav(nav));
+  }, []);
 
   useEffect(() => {
     screenSyncSmoothingRef.current = resolveScreenSyncSmoothing(outputSettings);

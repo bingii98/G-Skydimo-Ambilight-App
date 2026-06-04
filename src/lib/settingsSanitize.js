@@ -248,7 +248,8 @@ export function sanitizeSettings(settings, defaults = {}) {
     delete next.screenSyncDepth;
 
     next.externalLeds = sanitizeExternalLeds(next.externalLeds);
-    next.activeNav = sanitizeActiveNav(next.activeNav, defaults.activeNav || "devices");
+    // Navigation tab is session-only; always open on Devices.
+    next.activeNav = "devices";
 
     return next;
   } catch {

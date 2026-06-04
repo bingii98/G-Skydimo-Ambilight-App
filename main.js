@@ -14,6 +14,7 @@ const { fetchGradientSuggestion } = require("./services/openaiGradient");
 const { fetchAnimationSuggestion } = require("./services/openaiAnimation");
 const { loadAppBehavior, saveAppBehavior } = require("./appBehaviorState");
 const {
+  STARTUP_LAUNCH_ARG,
   applyStartupProcessPriority,
   applyWindowsStartupRegistration,
   buildWindowsStartupArgs,
@@ -107,7 +108,8 @@ function applyLoginItemSettings() {
     return { ok: true, error: null };
   }
 
-  const startInTray = appBehavior.launchAtStartup && appBehavior.runInTray;
+  // Boot via Task Scheduler / login item should always land in the tray.
+  const startInTray = appBehavior.launchAtStartup;
 
   if (process.platform === "win32") {
     // Prefer Task Scheduler (high launch priority, zero logon delay). Fall back to
@@ -172,11 +174,11 @@ function applyLoginItemSettings() {
 }
 
 function shouldStartHiddenInTray() {
-  if (!appBehavior.runInTray) {
-    return false;
+  if (process.argv.includes(START_IN_TRAY_ARG)) {
+    return true;
   }
 
-  if (process.argv.includes(START_IN_TRAY_ARG)) {
+  if (process.argv.includes(STARTUP_LAUNCH_ARG)) {
     return true;
   }
 
