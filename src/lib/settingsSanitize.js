@@ -170,6 +170,12 @@ export function sanitizeSettings(settings, defaults = {}) {
 
     next.livePreview = true;
     next.launchAtStartup = Boolean(next.launchAtStartup);
+    next.runInTray = Boolean(next.runInTray);
+    // Launching with Windows always lands in the tray (no window), so the app
+    // must keep running in the tray instead of quitting when the window closes.
+    if (next.launchAtStartup) {
+      next.runInTray = true;
+    }
     next.colorScheme = normalizeColorSchemePreference(
       next.colorScheme,
       defaults.colorScheme || "system"

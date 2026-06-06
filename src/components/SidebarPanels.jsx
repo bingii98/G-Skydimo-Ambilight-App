@@ -490,11 +490,13 @@ export function SettingsPanel({
             label="Run in system tray when closing"
             size="sm"
             checked={settings.runInTray}
+            disabled={settings.launchAtStartup}
             onChange={(event) => onChange({ runInTray: event.currentTarget.checked })}
             color="teal"
           />
           <Text size="xs" c="dimmed" lh={1.5}>
-            With <strong>Start when computer starts</strong> enabled, the app opens in the system tray only (no window).
+            With <strong>Start when computer starts</strong> enabled, the app opens in the system tray only (no window),
+            so <strong>Run in system tray when closing</strong> stays on automatically.
             When <strong>Run in system tray when closing</strong> is off, closing the window quits the app; when it is on,
             the app hides to the tray and keeps running so LEDs stay on.
             On Windows, startup uses a high-priority scheduled task so the app launches as early as possible at logon.

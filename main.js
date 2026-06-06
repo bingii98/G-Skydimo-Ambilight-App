@@ -608,6 +608,12 @@ ipcMain.handle("app:setBehavior", async (_event, behavior = {}) => {
     loginItemsChanged = true;
   }
 
+  // Launching with Windows opens straight into the tray (no window), so the app
+  // must stay alive in the tray rather than quit when the window is closed.
+  if (appBehavior.launchAtStartup) {
+    appBehavior.runInTray = true;
+  }
+
   let startupRegistration = { ok: true, error: null };
   if (loginItemsChanged) {
     startupRegistration = applyLoginItemSettings();
@@ -631,7 +637,17 @@ ipcMain.handle("app:getStartupStatus", async () => {
     return { registered: desired, desired, mismatch: false };
   }
   const { exists: taskExists } = queryWindowsStartupTask();
-  const loginItemRegistered = Boolean(app.getLoginItemSettings().openAtLogin);
+  // The registry fallback (app.setLoginItemSettings) stores the Run command with
+  // custom launch args. getLoginItemSettings only reports openAtLogin:true when the
+  // queried path/args match exactly, so we must check with the same args used to
+  // register — otherwise a present entry is mis-read as "not registered" and the UI
+  // silently disables the feature on the next settings sync.
+  const startInTrayArg = desired ? START_IN_TRAY_ARG : null;
+  const startupArgs = buildWindowsStartupArgs(startInTrayArg ? [startInTrayArg] : []);
+  const loginItemRegistered =
+    Boolean(
+      app.getLoginItemSettings({ path: process.execPath, args: startupArgs }).openAtLogin
+    ) || Boolean(app.getLoginItemSettings().openAtLogin);
   const registered = taskExists || loginItemRegistered;
   return {
     registered,
@@ -691,6 +707,9 @@ app.on("second-instance", () => {
 app.whenReady().then(() => {
   app.setName(APP_NAME);
   Object.assign(appBehavior, loadAppBehavior());
+  if (appBehavior.launchAtStartup) {
+    appBehavior.runInTray = true;
+  }
   applyLoginItemSettings();
   applyStartupProcessPriority();
   attachTrayThemeListener();
